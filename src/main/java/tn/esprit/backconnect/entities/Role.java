@@ -1,11 +1,8 @@
 package tn.esprit.backconnect.entities;
 
 public enum Role {
-    VISITOR,
-    CAMP_OWNER,
+    ORGANIZER,
     CAMPER,
     ADMIN,
-    SPONSOR,
-    SERVICEMAN,
-    SELLER
+    SPONSOR
 }
