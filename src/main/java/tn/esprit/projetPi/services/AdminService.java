@@ -18,11 +18,8 @@ public class AdminService {
 
     private final UserRepository userRepository;
     private final CampsiteRepository campsiteRepository;
-    private final EventRepository eventRepository;
     private final ReservationRepository reservationRepository;
-    private final ReviewRepository reviewRepository;
-    private final MessageRepository messageRepository;
-    private final SponsorRepository sponsorRepository;
+
 
     public AdminDashboardDTO getDashboardStats() {
         LocalDateTime now = LocalDateTime.now();
@@ -46,17 +43,11 @@ public class AdminService {
         long totalCampsites = allCampsites.size();
         long activeCampsites = allCampsites.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive())).count();
         long featuredCampsites = allCampsites.stream().filter(c -> Boolean.TRUE.equals(c.getIsFeatured())).count();
-        
+
         // Event stats
-        List<Event> allEvents = eventRepository.findAll();
-        long totalEvents = allEvents.size();
-        long upcomingEvents = allEvents.stream()
-                .filter(e -> e.getStartDate() != null && e.getStartDate().isAfter(now))
-                .count();
-        long activeEvents = allEvents.stream()
-                .filter(e -> e.getStatus() == EventStatus.REGISTRATION_OPEN || e.getStatus() == EventStatus.IN_PROGRESS)
-                .count();
-        
+
+
+
         // Reservation stats
         List<Reservation> allReservations = reservationRepository.findAll();
         long totalReservations = allReservations.size();
@@ -68,7 +59,7 @@ public class AdminService {
                 .filter(r -> r.getStatus() == ReservationStatus.COMPLETED).count();
         long cancelledReservations = allReservations.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.CANCELLED).count();
-        
+
         // Revenue stats
         double totalRevenue = allReservations.stream()
                 .filter(r -> r.getStatus() == ReservationStatus.COMPLETED || r.getStatus() == ReservationStatus.CONFIRMED)
@@ -84,28 +75,10 @@ public class AdminService {
         double averageOrderValue = totalReservations > 0 ? totalRevenue / totalReservations : 0;
         
         // Review stats
-        List<Review> allReviews = reviewRepository.findAll();
-        long totalReviews = allReviews.size();
-        long pendingReviews = allReviews.stream().filter(r -> !Boolean.TRUE.equals(r.getIsApproved())).count();
-        long reportedReviews = allReviews.stream().filter(r -> Boolean.TRUE.equals(r.getIsReported())).count();
-        double averageRating = allReviews.stream()
-                .filter(r -> r.getRating() != null)
-                .mapToInt(Review::getRating)
-                .average()
-                .orElse(0);
-        
+
         // Message stats
-        List<Message> allMessages = messageRepository.findAll();
-        long totalMessages = allMessages.size();
-        long messagesThisWeek = allMessages.stream()
-                .filter(m -> m.getCreatedAt() != null && m.getCreatedAt().isAfter(weekStart))
-                .count();
-        
-        // Sponsor stats
-        List<Sponsor> allSponsors = sponsorRepository.findAll();
-        long totalSponsors = allSponsors.size();
-        long activeSponsors = allSponsors.stream().filter(s -> Boolean.TRUE.equals(s.getIsActive())).count();
-        
+
+
         return AdminDashboardDTO.builder()
                 .totalUsers(totalUsers)
                 .activeUsers(activeUsers)
@@ -114,9 +87,7 @@ public class AdminService {
                 .totalCampsites(totalCampsites)
                 .activeCampsites(activeCampsites)
                 .featuredCampsites(featuredCampsites)
-                .totalEvents(totalEvents)
-                .upcomingEvents(upcomingEvents)
-                .activeEvents(activeEvents)
+
                 .totalReservations(totalReservations)
                 .pendingReservations(pendingReservations)
                 .confirmedReservations(confirmedReservations)
@@ -125,14 +96,7 @@ public class AdminService {
                 .totalRevenue(totalRevenue)
                 .revenueThisMonth(revenueThisMonth)
                 .averageOrderValue(averageOrderValue)
-                .totalReviews(totalReviews)
-                .pendingReviews(pendingReviews)
-                .reportedReviews(reportedReviews)
-                .averageRating(averageRating)
-                .totalMessages(totalMessages)
-                .messagesThisWeek(messagesThisWeek)
-                .totalSponsors(totalSponsors)
-                .activeSponsors(activeSponsors)
+
                 .build();
     }
 

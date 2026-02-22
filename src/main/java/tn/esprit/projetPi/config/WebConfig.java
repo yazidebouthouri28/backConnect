@@ -14,11 +14,13 @@ public class WebConfig {
 
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                // Apply CORS to all endpoints
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:4200") // Angular dev server
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // allowed HTTP methods
-                        .allowCredentials(true); // allow cookies/auth headers if needed
+                        .allowedOrigins("http://localhost:4200")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+                        .allowedHeaders("*") // Permet tous les en-têtes (Authorization, Content-Type, etc.)
+                        .exposedHeaders("Authorization") // Expose l'en-tête Authorization au frontend
+                        .allowCredentials(true)
+                        .maxAge(3600); // Cache la configuration CORS pendant 1 heure
             }
         };
     }
