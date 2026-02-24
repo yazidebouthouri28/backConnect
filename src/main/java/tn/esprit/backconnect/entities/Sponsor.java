@@ -10,7 +10,6 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "sponsor")
 public class Sponsor extends User {
 
     private String content;

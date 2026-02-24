@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "organizers")
 public class Organizer extends User {
 
     @JsonIgnore
