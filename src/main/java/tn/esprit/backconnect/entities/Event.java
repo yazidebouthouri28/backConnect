@@ -1,6 +1,6 @@
 package tn.esprit.backconnect.entities;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -47,17 +47,27 @@ public class Event {
     @JoinColumn(name = "organizer_id", nullable = false)
     private Organizer organizer;
 
+    @ManyToOne
+    @JoinColumn(name = "event_type_id")
+    private EventType eventType;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<TicketReservation> reservations;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
+    private List<TicketRequest> ticketRequests;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<Notification> notifications;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<EventComment> comments;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL)
     private List<Complaint> complaints;
-
-    // Getters, Setters, Constructors
 }

@@ -1,5 +1,6 @@
 package tn.esprit.backconnect.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import jakarta.persistence.*;
 import java.util.List;
@@ -28,9 +29,11 @@ public class User {
     private String phoneNumber;
     private String address;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "user")
     private List<ForumArticle> articles;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "sender")
     private List<ChatMessage> messages;
 }
