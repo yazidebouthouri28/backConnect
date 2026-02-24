@@ -1,11 +1,11 @@
-package tn.esprit.projetPi.security;
+package tn.esprit.backconnect.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import tn.esprit.projetPi.entities.User;
+import tn.esprit.backconnect.entities.User;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;

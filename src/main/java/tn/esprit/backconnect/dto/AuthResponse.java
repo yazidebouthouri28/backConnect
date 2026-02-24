@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.dto;
+package tn.esprit.backconnect.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.entities;
+package tn.esprit.backconnect.entities;
 
 public enum Role {
     USER,

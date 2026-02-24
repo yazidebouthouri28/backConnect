@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.security;
+package tn.esprit.backconnect.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

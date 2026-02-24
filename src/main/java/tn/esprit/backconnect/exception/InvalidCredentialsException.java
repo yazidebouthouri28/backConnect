@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.exception;
+package tn.esprit.backconnect.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

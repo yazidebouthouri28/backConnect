@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.security;
+package tn.esprit.backconnect.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

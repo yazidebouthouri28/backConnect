@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.aspects;
+package tn.esprit.backconnect.aspects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Aspect
 public class PerformanceAspect {
 
-    @Around("execution(* tn.esprit.projetPi.services.*.*(..))")
+    @Around("execution(* tn.esprit.backconnect.services.*.*(..))")
     public Object profile(ProceedingJoinPoint pjp) throws Throwable {
         long start = System.currentTimeMillis();
         Object obj = pjp.proceed();

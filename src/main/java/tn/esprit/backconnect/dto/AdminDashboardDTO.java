@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.dto;
+package tn.esprit.backconnect.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,12 +61,7 @@ public class AdminDashboardDTO {
     // Transaction stats
     private Long totalTransactions;
     private BigDecimal totalWalletBalance;
-    
-    // Top performers
-    private List<ProductDTO> topSellingProducts;
-    private List<SellerStatsDTO> topSellers;
-    private List<CategoryDTO> topCategories;
-    
+
     // Charts data
     private Map<String, BigDecimal> revenueByDay;
     private Map<String, Long> ordersByDay;

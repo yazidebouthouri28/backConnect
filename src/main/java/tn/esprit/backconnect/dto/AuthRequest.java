@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.dto;
+package tn.esprit.backconnect.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

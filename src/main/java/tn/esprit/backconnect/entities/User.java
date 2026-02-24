@@ -1,10 +1,8 @@
-package tn.esprit.projetPi.entities;
+package tn.esprit.backconnect.entities;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,10 +16,12 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Document(collection = "users")
+@Entity
+@Table(name = "users")
 public class User {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     String id;
 
     // Basic info
@@ -35,11 +35,12 @@ public class User {
     Long age;
 
     // Role management
+    @Enumerated(EnumType.STRING)
     Role role;
     Boolean isSeller;
     Boolean isBuyer;
     Boolean isAdmin;
-    
+
     // Seller specific fields
     String storeName;
     String storeDescription;
@@ -51,7 +52,7 @@ public class User {
     BigDecimal totalRevenue;
     Boolean sellerVerified;
     LocalDateTime sellerSince;
-    
+
     // Account status
     Boolean isActive;
     Boolean isSuspended;
@@ -64,25 +65,29 @@ public class User {
     String bio;
     String location;
     String website;
+    @ElementCollection
     List<String> interests;
+    @ElementCollection
+    @CollectionTable(name = "user_social_links")
+    @MapKeyColumn(name = "platform")
+    @Column(name = "url")
     Map<String, String> socialLinks;
-    
+
     // Verification
     Boolean emailVerified;
     Boolean phoneVerified;
     String emailVerificationToken;
     String passwordResetToken;
     LocalDateTime passwordResetExpires;
-    
+
     // Loyalty
     Integer loyaltyPoints;
     String loyaltyTier; // BRONZE, SILVER, GOLD, PLATINUM
-    
+
     // Shipping addresses
-    List<ShippingAddress> shippingAddresses = new ArrayList<>();
     String defaultShippingAddressId;
     String defaultBillingAddressId;
-    
+
     // Statistics
     Integer totalOrders;
     BigDecimal totalSpent;
@@ -90,9 +95,11 @@ public class User {
     Integer reviewsReceived;
     Double averageRating;
     Integer reviewCount;
-    
+
     // Camping preferences (kept for compatibility)
+    @ElementCollection
     List<String> favoriteCampsites;
+    @ElementCollection
     List<String> favoriteEvents;
     Integer totalCampingTrips;
     Integer totalEventsAttended;
@@ -103,9 +110,9 @@ public class User {
     LocalDateTime updatedAt;
 
     // Relations
-    @DBRef
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
     List<ForumArticle> articles;
 
-    @DBRef
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)
     List<ChatMessage> messages;
 }

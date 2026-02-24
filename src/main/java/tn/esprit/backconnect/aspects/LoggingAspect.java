@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.aspects;
+package tn.esprit.backconnect.aspects;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang .JoinPoint;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Aspect
 
 public class LoggingAspect {
-    @Pointcut("execution(* tn.esprit.projetPi.services.*.get*(..))")
+    @Pointcut("execution(* tn.esprit.backconnect.services.*.get*(..))")
     public void methodCall() {}
 
     @After("methodCall() ")

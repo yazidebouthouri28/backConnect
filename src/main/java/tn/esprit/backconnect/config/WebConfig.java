@@ -1,4 +1,4 @@
-package tn.esprit.projetPi.config;
+package tn.esprit.backconnect.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
