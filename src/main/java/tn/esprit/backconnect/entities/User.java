@@ -110,7 +110,7 @@ public class User {
     LocalDateTime updatedAt;
 
     // Relations
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     List<ForumArticle> articles;
 
     @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL)

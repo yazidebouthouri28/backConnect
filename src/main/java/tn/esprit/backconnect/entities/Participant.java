@@ -12,7 +12,6 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "participants")
 public class Participant extends User {
 
     @OneToMany(mappedBy = "participant", cascade = CascadeType.ALL)
