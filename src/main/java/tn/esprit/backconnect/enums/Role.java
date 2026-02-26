@@ -1,0 +1,12 @@
+package tn.esprit.backconnect.enums;
+
+public enum Role {
+    ADMIN,
+    USER,
+    SELLER,
+    BUYER,
+    ORGANIZER,
+    PARTICIPANT,
+    MODERATOR,
+    SPONSOR
+}
