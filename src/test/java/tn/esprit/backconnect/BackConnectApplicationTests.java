@@ -1,4 +1,4 @@
-package tn.esprit.backconnect;
+package tn.esprit.projetintegre;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
