@@ -153,7 +153,7 @@ public class DtoMapper {
                 .country(null)
                 .contactPerson(entity.getContactPerson())
                 .isActive(entity.getIsActive())
-                .sponsorshipCount(entity.getSponsorships() != null ? entity.getSponsorships().size() : 0)
+                //.sponsorshipCount(entity.getSponsorships() != null ? entity.getSponsorships().size() : 0)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import tn.esprit.projetintegre.enums.Role;
 
 @Data
 @Builder
@@ -32,4 +33,11 @@ public class RegisterRequest {
 
     private String phone;
     private String address;
+    private Role role;
+    private String country;
+    private Integer age;
+    private String storeName;
+    private String bio;
+    private Boolean isBuyer;
+    private Boolean isSeller;
 }
