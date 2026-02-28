@@ -3,15 +3,13 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "virtual_tours", indexes = {
-    @Index(name = "idx_vtour_site", columnList = "site_id"),
-    @Index(name = "idx_vtour_active", columnList = "isActive")
+        @Index(name = "idx_vtour_site", columnList = "site_id"),
+        @Index(name = "idx_vtour_active", columnList = "isActive")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class VirtualTour {
@@ -20,21 +18,21 @@ public class VirtualTour {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le titre est obligatoire")
-    @Size(min = 3, max = 200, message = "Le titre doit contenir entre 3 et 200 caractères")
+    @NotBlank(message = "Title is required")
+    @Size(min = 3, max = 200, message = "Title must be between 3 and 200 characters")
     private String title;
 
-    @Size(max = 2000, message = "La description ne peut pas dépasser 2000 caractères")
+    @Size(max = 2000, message = "Description cannot exceed 2000 characters")
     @Column(length = 2000)
     private String description;
 
     private String thumbnailUrl;
 
-    @Min(value = 0, message = "La durée doit être positive")
+    @Min(value = 0, message = "Duration must be positive")
     private Integer durationMinutes;
 
-    @Min(value = 0, message = "Le nombre de vues doit être positif")
     @Builder.Default
+    @Min(value = 0)
     private Integer viewCount = 0;
 
     @Builder.Default
@@ -44,7 +42,7 @@ public class VirtualTour {
     private Boolean isFeatured = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "site_id")
+    @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
     @OneToMany(mappedBy = "virtualTour", cascade = CascadeType.ALL, orphanRemoval = true)

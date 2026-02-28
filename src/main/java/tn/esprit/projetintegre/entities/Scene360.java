@@ -3,15 +3,13 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "scenes_360", indexes = {
-    @Index(name = "idx_scene_tour", columnList = "virtual_tour_id"),
-    @Index(name = "idx_scene_order", columnList = "orderIndex")
+        @Index(name = "idx_scene_tour", columnList = "virtual_tour_id"),
+        @Index(name = "idx_scene_order", columnList = "orderIndex")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Scene360 {
@@ -20,33 +18,33 @@ public class Scene360 {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le titre est obligatoire")
-    @Size(max = 200, message = "Le titre ne peut pas dépasser 200 caractères")
+    @NotBlank(message = "Title is required")
+    @Size(max = 200, message = "Title cannot exceed 200 characters")
     private String title;
 
-    @Size(max = 1000, message = "La description ne peut pas dépasser 1000 caractères")
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     @Column(length = 1000)
     private String description;
 
-    @NotBlank(message = "L'URL de l'image est obligatoire")
+    @NotBlank(message = "Image URL is required")
     private String imageUrl;
 
     private String thumbnailUrl;
 
-    @Min(value = 0, message = "L'index doit être positif")
     @Builder.Default
+    @Min(value = 0, message = "Order index must be positive")
     private Integer orderIndex = 0;
 
-    @DecimalMin(value = "-180.0", message = "La longitude initiale doit être entre -180 et 180")
-    @DecimalMax(value = "180.0", message = "La longitude initiale doit être entre -180 et 180")
+    @DecimalMin(value = "-180.0")
+    @DecimalMax(value = "180.0")
     private Double initialYaw;
 
-    @DecimalMin(value = "-90.0", message = "La latitude initiale doit être entre -90 et 90")
-    @DecimalMax(value = "90.0", message = "La latitude initiale doit être entre -90 et 90")
+    @DecimalMin(value = "-90.0")
+    @DecimalMax(value = "90.0")
     private Double initialPitch;
 
-    @Min(value = 10, message = "Le FOV doit être au moins 10")
-    @Max(value = 120, message = "Le FOV ne peut pas dépasser 120")
+    @Min(value = 10, message = "FOV must be at least 10")
+    @Max(value = 120, message = "FOV cannot exceed 120")
     @Builder.Default
     private Integer initialFov = 90;
 

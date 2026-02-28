@@ -7,14 +7,13 @@ import tn.esprit.projetintegre.enums.CertificationStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "certifications", indexes = {
-    @Index(name = "idx_certification_user", columnList = "user_id"),
-    @Index(name = "idx_certification_status", columnList = "status"),
-    @Index(name = "idx_certification_code", columnList = "certificationCode")
+        @Index(name = "idx_certification_site", columnList = "site_id"),
+        @Index(name = "idx_certification_status", columnList = "status"),
+        @Index(name = "idx_certification_code", columnList = "certificationCode")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Certification {
@@ -23,46 +22,47 @@ public class Certification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le code de certification est obligatoire")
-    @Size(max = 50, message = "Le code ne peut pas dépasser 50 caractères")
+    @NotBlank(message = "Certification code is required")
+    @Size(max = 50)
     @Column(unique = true)
     private String certificationCode;
 
-    @NotBlank(message = "Le titre est obligatoire")
-    @Size(min = 3, max = 200, message = "Le titre doit contenir entre 3 et 200 caractères")
+    @NotBlank(message = "Title is required")
+    @Size(min = 3, max = 200)
     private String title;
 
-    @Size(max = 2000, message = "La description ne peut pas dépasser 2000 caractères")
+    @Size(max = 2000)
     @Column(length = 2000)
     private String description;
 
-    @NotBlank(message = "L'organisme est obligatoire")
-    @Size(max = 200, message = "Le nom de l'organisme ne peut pas dépasser 200 caractères")
+    @NotBlank(message = "Issuing organization is required")
+    @Size(max = 200)
     private String issuingOrganization;
 
-    @NotNull(message = "La date d'émission est obligatoire")
+    @NotNull(message = "Issue date is required")
     private LocalDate issueDate;
 
-    private LocalDate expirationDate;
+    private LocalDate expiryDate;
 
     @Enumerated(EnumType.STRING)
-    @NotNull(message = "Le statut est obligatoire")
+    @NotNull(message = "Status is required")
+    @Builder.Default
     private CertificationStatus status = CertificationStatus.PENDING;
 
     private String documentUrl;
     private String verificationUrl;
 
-    @Min(value = 0, message = "Le score doit être positif")
-    @Max(value = 100, message = "Le score ne peut pas dépasser 100")
+    @Min(value = 0, message = "Score must be positive")
+    @Max(value = 100, message = "Score cannot exceed 100")
     private Integer score;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "site_id", nullable = false)
+    private Site site;
 
     @OneToMany(mappedBy = "certification", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<CertificationItem> items = new ArrayList<>();
+    private List<CertificationItem> certificationItems = new ArrayList<>();
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

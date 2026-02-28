@@ -3,14 +3,13 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Entity
 @Table(name = "route_guides", indexes = {
-    @Index(name = "idx_route_tour", columnList = "virtual_tour_id")
+        @Index(name = "idx_route_site", columnList = "site_id"),
+        @Index(name = "idx_route_tour", columnList = "virtual_tour_id")
 })
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class RouteGuide {
@@ -19,29 +18,30 @@ public class RouteGuide {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le nom est obligatoire")
-    @Size(max = 200, message = "Le nom ne peut pas dépasser 200 caractères")
+    @NotBlank(message = "Name is required")
+    @Size(max = 200, message = "Name cannot exceed 200 characters")
     private String name;
 
-    @Size(max = 1000, message = "La description ne peut pas dépasser 1000 caractères")
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
     @Column(length = 1000)
     private String description;
 
-    @Min(value = 0, message = "La durée estimée doit être positive")
+    @NotBlank(message = "Origin city is required")
+    private String originCity;
+
+    @Min(value = 0, message = "Distance must be positive")
+    private Double distanceKm;
+
+    @Min(value = 0, message = "Duration must be positive")
     private Integer estimatedDurationMinutes;
 
-    @Min(value = 0, message = "La distance doit être positive")
-    private Double distanceMeters;
+    @Size(max = 50)
+    private String difficulty; // EASY, MEDIUM, HARD
 
-    @Size(max = 50, message = "La difficulté ne peut pas dépasser 50 caractères")
-    private String difficulty;
+    @Column(columnDefinition = "TEXT")
+    private String instructions; // JSON steps
 
-    @ElementCollection
-    @CollectionTable(name = "route_scene_order", joinColumns = @JoinColumn(name = "route_id"))
-    @Column(name = "scene_id")
-    @OrderColumn(name = "position")
-    @Builder.Default
-    private List<Long> sceneOrder = new ArrayList<>();
+    private String mapUrl;
 
     @ElementCollection
     @CollectionTable(name = "route_waypoints", joinColumns = @JoinColumn(name = "route_id"))
@@ -53,7 +53,11 @@ public class RouteGuide {
     private Boolean isActive = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "virtual_tour_id", nullable = false)
+    @JoinColumn(name = "site_id", nullable = false)
+    private Site site;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "virtual_tour_id")
     private VirtualTour virtualTour;
 
     @Column(updatable = false)

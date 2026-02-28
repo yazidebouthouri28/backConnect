@@ -1,18 +1,9 @@
 package tn.esprit.projetintegre.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.dto.ApiResponse;
-import tn.esprit.projetintegre.dto.PageResponse;
-import tn.esprit.projetintegre.dto.request.CertificationRequest;
-import tn.esprit.projetintegre.dto.response.CertificationResponse;
+import tn.esprit.projetintegre.entities.Certification;
 import tn.esprit.projetintegre.enums.CertificationStatus;
 import tn.esprit.projetintegre.services.CertificationService;
 
@@ -21,66 +12,47 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/certifications")
 @RequiredArgsConstructor
-@Tag(name = "Certifications", description = "Gestion des certifications")
+@CrossOrigin(origins = "*")
 public class CertificationController {
 
     private final CertificationService certificationService;
 
-    @GetMapping
-    @Operation(summary = "Liste toutes les certifications")
-    public ResponseEntity<ApiResponse<List<CertificationResponse>>> getAll() {
-        return ResponseEntity.ok(ApiResponse.success(certificationService.getAll()));
+    @GetMapping("/site/{siteId}")
+    public List<Certification> getBySite(@PathVariable Long siteId) {
+        return certificationService.getCertificationsBySite(siteId);
     }
 
-    @GetMapping("/paginated")
-    @Operation(summary = "Liste paginée des certifications")
-    public ResponseEntity<ApiResponse<PageResponse<CertificationResponse>>> getAllPaginated(Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(certificationService.getAllPaginated(pageable))));
+    @GetMapping("/status/{status}")
+    public List<Certification> getByStatus(@PathVariable CertificationStatus status) {
+        return certificationService.getCertificationsByStatus(status);
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Récupère une certification par ID")
-    public ResponseEntity<ApiResponse<CertificationResponse>> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.success(certificationService.getById(id)));
+    public ResponseEntity<Certification> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(certificationService.getCertificationById(id));
     }
 
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Liste les certifications d'un utilisateur")
-    public ResponseEntity<ApiResponse<List<CertificationResponse>>> getByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(ApiResponse.success(certificationService.getByUserId(userId)));
-    }
-
-    @PostMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @Operation(summary = "Crée une nouvelle certification")
-    public ResponseEntity<ApiResponse<CertificationResponse>> create(@Valid @RequestBody CertificationRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Certification créée avec succès", certificationService.create(request)));
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    @Operation(summary = "Met à jour une certification")
-    public ResponseEntity<ApiResponse<CertificationResponse>> update(
-            @PathVariable Long id,
-            @Valid @RequestBody CertificationRequest request) {
-        return ResponseEntity.ok(ApiResponse.success("Certification mise à jour", certificationService.update(id, request)));
+    @PostMapping("/site/{siteId}")
+    public ResponseEntity<Certification> create(@PathVariable Long siteId,
+                                                @RequestBody Certification certification) {
+        return ResponseEntity.ok(certificationService.createCertification(siteId, certification));
     }
 
     @PatchMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Met à jour le statut d'une certification")
-    public ResponseEntity<ApiResponse<CertificationResponse>> updateStatus(
-            @PathVariable Long id,
-            @RequestParam CertificationStatus status) {
-        return ResponseEntity.ok(ApiResponse.success("Statut mis à jour", certificationService.updateStatus(id, status)));
+    public ResponseEntity<Certification> updateStatus(@PathVariable Long id,
+                                                      @RequestParam CertificationStatus status) {
+        return ResponseEntity.ok(certificationService.updateStatus(id, status));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Certification> update(@PathVariable Long id,
+                                                @RequestBody Certification certification) {
+        return ResponseEntity.ok(certificationService.updateCertification(id, certification));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Supprime une certification")
-    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
-        certificationService.delete(id);
-        return ResponseEntity.ok(ApiResponse.success("Certification supprimée", null));
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        certificationService.deleteCertification(id);
+        return ResponseEntity.noContent().build();
     }
 }
