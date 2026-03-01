@@ -1,11 +1,12 @@
 package tn.esprit.projetintegre.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.entities.Site;
+import tn.esprit.projetintegre.dto.request.SiteRequest;
+import tn.esprit.projetintegre.dto.response.SiteResponse;
 import tn.esprit.projetintegre.services.SiteService;
-
 
 import java.util.List;
 
@@ -18,33 +19,33 @@ public class SiteController {
     private final SiteService siteService;
 
     @GetMapping
-    public List<Site> getAllSites() {
+    public List<SiteResponse> getAllSites() {
         return siteService.getAllSites();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Site> getSiteById(@PathVariable Long id) {
+    public ResponseEntity<SiteResponse> getSiteById(@PathVariable Long id) {
         return ResponseEntity.ok(siteService.getSiteById(id));
     }
 
     @GetMapping("/city/{city}")
-    public List<Site> getSitesByCity(@PathVariable String city) {
+    public List<SiteResponse> getSitesByCity(@PathVariable String city) {
         return siteService.getSitesByCity(city);
     }
 
     @GetMapping("/search")
-    public List<Site> searchSites(@RequestParam String name) {
+    public List<SiteResponse> searchSites(@RequestParam String name) {
         return siteService.searchSitesByName(name);
     }
 
     @PostMapping
-    public ResponseEntity<Site> createSite(@RequestBody Site site) {
-        return ResponseEntity.ok(siteService.createSite(site));
+    public ResponseEntity<SiteResponse> createSite(@Valid @RequestBody SiteRequest request) {
+        return ResponseEntity.ok(siteService.createSite(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Site> updateSite(@PathVariable Long id, @RequestBody Site site) {
-        return ResponseEntity.ok(siteService.updateSite(id, site));
+    public ResponseEntity<SiteResponse> updateSite(@PathVariable Long id, @Valid @RequestBody SiteRequest request) {
+        return ResponseEntity.ok(siteService.updateSite(id, request));
     }
 
     @DeleteMapping("/{id}")

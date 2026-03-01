@@ -1,9 +1,11 @@
 package tn.esprit.projetintegre.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.entities.Certification;
+import tn.esprit.projetintegre.dto.request.CertificationRequest;
+import tn.esprit.projetintegre.dto.response.CertificationResponse;
 import tn.esprit.projetintegre.enums.CertificationStatus;
 import tn.esprit.projetintegre.services.CertificationService;
 
@@ -18,40 +20,40 @@ public class CertificationController {
     private final CertificationService certificationService;
 
     @GetMapping("/site/{siteId}")
-    public List<Certification> getBySite(@PathVariable Long siteId) {
+    public List<CertificationResponse> getCertificationsBySite(@PathVariable Long siteId) {
         return certificationService.getCertificationsBySite(siteId);
     }
 
     @GetMapping("/status/{status}")
-    public List<Certification> getByStatus(@PathVariable CertificationStatus status) {
+    public List<CertificationResponse> getCertificationsByStatus(@PathVariable CertificationStatus status) {
         return certificationService.getCertificationsByStatus(status);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Certification> getById(@PathVariable Long id) {
+    public ResponseEntity<CertificationResponse> getCertificationById(@PathVariable Long id) {
         return ResponseEntity.ok(certificationService.getCertificationById(id));
     }
 
     @PostMapping("/site/{siteId}")
-    public ResponseEntity<Certification> create(@PathVariable Long siteId,
-                                                @RequestBody Certification certification) {
-        return ResponseEntity.ok(certificationService.createCertification(siteId, certification));
+    public ResponseEntity<CertificationResponse> createCertification(@PathVariable Long siteId,
+            @Valid @RequestBody CertificationRequest request) {
+        return ResponseEntity.ok(certificationService.createCertification(siteId, request));
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Certification> updateStatus(@PathVariable Long id,
-                                                      @RequestParam CertificationStatus status) {
+    @PutMapping("/{id}/status")
+    public ResponseEntity<CertificationResponse> updateStatus(@PathVariable Long id,
+            @RequestParam CertificationStatus status) {
         return ResponseEntity.ok(certificationService.updateStatus(id, status));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Certification> update(@PathVariable Long id,
-                                                @RequestBody Certification certification) {
-        return ResponseEntity.ok(certificationService.updateCertification(id, certification));
+    public ResponseEntity<CertificationResponse> updateCertification(@PathVariable Long id,
+            @Valid @RequestBody CertificationRequest request) {
+        return ResponseEntity.ok(certificationService.updateCertification(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCertification(@PathVariable Long id) {
         certificationService.deleteCertification(id);
         return ResponseEntity.noContent().build();
     }

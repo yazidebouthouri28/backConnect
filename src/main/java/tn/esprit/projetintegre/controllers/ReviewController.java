@@ -1,9 +1,11 @@
 package tn.esprit.projetintegre.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.entities.Review;
+import tn.esprit.projetintegre.dto.request.ReviewRequest;
+import tn.esprit.projetintegre.dto.response.ReviewResponse;
 import tn.esprit.projetintegre.services.ReviewService;
 
 import java.util.List;
@@ -17,18 +19,20 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping("/site/{siteId}")
-    public List<Review> getReviewsBySite(@PathVariable Long siteId) {
+    public List<ReviewResponse> getReviewsBySite(@PathVariable Long siteId) {
         return reviewService.getReviewsBySite(siteId);
     }
 
     @PostMapping("/site/{siteId}")
-    public ResponseEntity<Review> addReview(@PathVariable Long siteId, @RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.addReview(siteId, review));
+    public ResponseEntity<ReviewResponse> addReview(@PathVariable Long siteId,
+            @Valid @RequestBody ReviewRequest request) {
+        return ResponseEntity.ok(reviewService.addReview(siteId, request));
     }
 
     @PutMapping("/{reviewId}")
-    public ResponseEntity<Review> updateReview(@PathVariable Long reviewId, @RequestBody Review review) {
-        return ResponseEntity.ok(reviewService.updateReview(reviewId, review));
+    public ResponseEntity<ReviewResponse> updateReview(@PathVariable Long reviewId,
+            @Valid @RequestBody ReviewRequest request) {
+        return ResponseEntity.ok(reviewService.updateReview(reviewId, request));
     }
 
     @DeleteMapping("/{reviewId}")

@@ -2,44 +2,47 @@ package tn.esprit.projetintegre.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.esprit.projetintegre.dto.request.CertificationItemRequest;
+import tn.esprit.projetintegre.dto.response.CertificationItemResponse;
 import tn.esprit.projetintegre.entities.Certification;
 import tn.esprit.projetintegre.entities.CertificationItem;
+import tn.esprit.projetintegre.mapper.SiteModuleMapper;
 import tn.esprit.projetintegre.repositories.CertificationItemRepository;
 import tn.esprit.projetintegre.repositories.CertificationRepository;
-
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CertificationItemService  {
+public class CertificationItemService {
 
     private final CertificationItemRepository certificationItemRepository;
     private final CertificationRepository certificationRepository;
+    private final SiteModuleMapper siteMapper;
 
-    public List<CertificationItem> getItemsByCertification(Long certificationId) {
-        return certificationItemRepository.findByCertification_CertificationId(certificationId);
+    public List<CertificationItemResponse> getItemsByCertification(Long certificationId) {
+        return siteMapper
+                .toCertificationItemResponseList(certificationItemRepository.findByCertification_Id(certificationId));
     }
 
-    public CertificationItem addItem(Long certificationId, CertificationItem item) {
+    public CertificationItemResponse addItem(Long certificationId, CertificationItemRequest request) {
         Certification cert = certificationRepository.findById(certificationId)
                 .orElseThrow(() -> new RuntimeException("Certification not found"));
-        item.setCertification(cert);
+        CertificationItem item = siteMapper.toEntity(request, cert);
+        if (item == null)
+            throw new RuntimeException("Invalid request");
         CertificationItem saved = certificationItemRepository.save(item);
-        // Recalculate total score
         recalculateScore(cert);
-        return saved;
+        return siteMapper.toResponse(saved);
     }
 
-    public CertificationItem updateItem(Long itemId, CertificationItem updated) {
+    public CertificationItemResponse updateItem(Long itemId, CertificationItemRequest request) {
         CertificationItem existing = certificationItemRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Item not found"));
-        existing.setCriteriaName(updated.getCriteriaName());
-        existing.setScore(updated.getScore());
-        existing.setComment(updated.getComment());
+        siteMapper.updateEntity(existing, request);
         CertificationItem saved = certificationItemRepository.save(existing);
         recalculateScore(existing.getCertification());
-        return saved;
+        return siteMapper.toResponse(saved);
     }
 
     public void deleteItem(Long itemId) {
@@ -52,7 +55,7 @@ public class CertificationItemService  {
 
     private void recalculateScore(Certification cert) {
         List<CertificationItem> items = certificationItemRepository
-                .findByCertification_CertificationId(cert.getCertificationId());
+                .findByCertification_Id(cert.getId());
         // Each item is 0-10, scale total to 0-100
         int total = items.stream().mapToInt(CertificationItem::getScore).sum();
         int maxPossible = items.size() * 10;

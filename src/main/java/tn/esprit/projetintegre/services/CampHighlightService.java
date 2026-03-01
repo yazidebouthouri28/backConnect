@@ -2,12 +2,14 @@ package tn.esprit.projetintegre.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import tn.esprit.projetintegre.dto.request.CampHighlightRequest;
+import tn.esprit.projetintegre.dto.response.CampHighlightResponse;
 import tn.esprit.projetintegre.entities.CampHighlight;
 import tn.esprit.projetintegre.entities.Site;
 import tn.esprit.projetintegre.enums.HighlightCategory;
+import tn.esprit.projetintegre.mapper.SiteModuleMapper;
 import tn.esprit.projetintegre.repositories.CampHighlightRepository;
 import tn.esprit.projetintegre.repositories.SiteRepository;
-
 
 import java.util.List;
 
@@ -17,34 +19,35 @@ public class CampHighlightService {
 
     private final CampHighlightRepository campHighlightRepository;
     private final SiteRepository siteRepository;
+    private final SiteModuleMapper siteMapper;
 
-    public List<CampHighlight> getHighlightsBySite(Long siteId) {
-        return campHighlightRepository.findBySite_SiteId(siteId);
+    public List<CampHighlightResponse> getHighlightsBySite(Long siteId) {
+        return siteMapper.toCampHighlightResponseList(campHighlightRepository.findBySite_Id(siteId));
     }
 
-    public List<CampHighlight> getHighlightsBySiteAndCategory(Long siteId, HighlightCategory category) {
-        return campHighlightRepository.findBySite_SiteIdAndCategory(siteId, category);
+    public List<CampHighlightResponse> getHighlightsBySiteAndCategory(Long siteId, HighlightCategory category) {
+        return siteMapper
+                .toCampHighlightResponseList(campHighlightRepository.findBySite_IdAndCategory(siteId, category));
     }
 
-    public CampHighlight getHighlightById(Long id) {
-        return campHighlightRepository.findById(id)
+    public CampHighlightResponse getHighlightById(Long id) {
+        CampHighlight highlight = campHighlightRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Highlight not found"));
+        return siteMapper.toResponse(highlight);
     }
 
-    public CampHighlight createHighlight(Long siteId, CampHighlight highlight) {
+    public CampHighlightResponse createHighlight(Long siteId, CampHighlightRequest request) {
         Site site = siteRepository.findById(siteId)
                 .orElseThrow(() -> new RuntimeException("Site not found"));
-        highlight.setSite(site);
-        return campHighlightRepository.save(highlight);
+        CampHighlight highlight = siteMapper.toEntity(request, site);
+        return siteMapper.toResponse(campHighlightRepository.save(highlight));
     }
 
-    public CampHighlight updateHighlight(Long id, CampHighlight updated) {
-        CampHighlight existing = getHighlightById(id);
-        existing.setTitle(updated.getTitle());
-        existing.setContent(updated.getContent());
-        existing.setCategory(updated.getCategory());
-        existing.setImageUrl(updated.getImageUrl());
-        return campHighlightRepository.save(existing);
+    public CampHighlightResponse updateHighlight(Long id, CampHighlightRequest request) {
+        CampHighlight existing = campHighlightRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Highlight not found"));
+        siteMapper.updateEntity(existing, request);
+        return siteMapper.toResponse(campHighlightRepository.save(existing));
     }
 
     public void deleteHighlight(Long id) {

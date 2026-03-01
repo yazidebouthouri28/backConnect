@@ -12,7 +12,11 @@ import java.util.*;
         @Index(name = "idx_site_city", columnList = "city"),
         @Index(name = "idx_site_active", columnList = "isActive")
 })
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Site {
 
     @Id
