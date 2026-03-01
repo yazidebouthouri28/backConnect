@@ -14,6 +14,7 @@ import tn.esprit.projetintegre.entities.Cart;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.entities.Wallet;
 import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.enums.SponsorStatus;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.repositories.CartRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
@@ -50,7 +51,8 @@ public class AuthService {
                 .phone(request.getPhone())
                 .address(request.getAddress())
                 .country(request.getCountry())
-                .role(request.getRole() != null ? request.getRole() : Role.USER) // 👈 use role from request
+                .role(request.getRole() != null ? request.getRole() : Role.USER)
+                .sponsorStatus(request.getRole() == Role.SPONSOR ? SponsorStatus.PENDING : null) // ← add this
                 .isActive(true)
                 .isSuspended(false)
                 .isBuyer(request.getIsBuyer() != null ? request.getIsBuyer() : true)

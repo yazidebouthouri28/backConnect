@@ -8,11 +8,15 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Event;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
+import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.enums.Role;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.EventRepository;
 import tn.esprit.projetintegre.repositories.SponsorRepository;
 import tn.esprit.projetintegre.repositories.SponsorshipRepository;
+import tn.esprit.projetintegre.repositories.UserRepository;
+import tn.esprit.projetintegre.enums.SponsorStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -70,6 +74,7 @@ public class SponsorService {
         sponsor.setContactPerson(sponsorDetails.getContactPerson());
         sponsor.setContactPosition(sponsorDetails.getContactPosition());
         sponsor.setNotes(sponsorDetails.getNotes());
+        sponsor.setTier(sponsorDetails.getTier());
         return sponsorRepository.save(sponsor);
     }
 
@@ -77,6 +82,35 @@ public class SponsorService {
         Sponsor sponsor = getSponsorById(id);
         sponsor.setIsActive(false);
         sponsorRepository.save(sponsor);
+    }
+    // add to constructor injection
+    private final UserRepository userRepository;
+
+    public List<User> getPendingSponsorRequests() {
+        return userRepository.findByRoleAndSponsorStatus(Role.SPONSOR, SponsorStatus.PENDING);
+    }
+
+    public void approveSponsorRequest(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setSponsorStatus(SponsorStatus.APPROVED);
+
+        // Auto-create a Sponsor entity for this user
+        Sponsor sponsor = Sponsor.builder()
+                .name(user.getName())
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .isActive(true)
+                .build();
+        sponsorRepository.save(sponsor);
+        userRepository.save(user);
+    }
+
+    public void rejectSponsorRequest(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        user.setSponsorStatus(SponsorStatus.REJECTED);
+        userRepository.save(user);
     }
 
     // Sponsorship methods

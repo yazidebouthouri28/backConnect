@@ -3,6 +3,7 @@ package tn.esprit.projetintegre.mapper;
 import org.springframework.stereotype.Component;
 import tn.esprit.projetintegre.dto.response.*;
 import tn.esprit.projetintegre.entities.*;
+import tn.esprit.projetintegre.enums.SponsorTier;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -156,6 +157,7 @@ public class DtoMapper {
                 //.sponsorshipCount(entity.getSponsorships() != null ? entity.getSponsorships().size() : 0)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
+                .tier(entity.getTier())
                 .build();
     }
 

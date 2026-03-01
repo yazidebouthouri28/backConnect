@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import tn.esprit.projetintegre.enums.SponsorTier;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -49,6 +50,8 @@ public class Sponsor {
     private String notes;
     
     private Boolean isActive = true;
+    @Enumerated(EnumType.STRING)
+    private SponsorTier tier;
     
     @OneToMany(mappedBy = "sponsor", cascade = CascadeType.ALL)
     @JsonIgnore  // <-- add this

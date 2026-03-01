@@ -1,7 +1,7 @@
 package tn.esprit.projetintegre.dto.response;
 
 import lombok.*;
-
+import tn.esprit.projetintegre.enums.SponsorTier;
 import java.time.LocalDateTime;
 
 @Data
@@ -26,4 +26,5 @@ public class SponsorResponse {
     private Integer sponsorshipCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private SponsorTier tier;
 }

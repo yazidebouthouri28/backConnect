@@ -48,10 +48,15 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/api/public/**",
+                                "/api/sponsors",
+                                "/api/sponsors/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/ws/**",
+                                "/api/sponsors/all",
+                                "/api/sponsors/requests",
+                                "/api/sponsors/requests/**",
                                 "/error"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
