@@ -57,6 +57,8 @@ public class SecurityConfig {
                                 "/api/sponsors/all",
                                 "/api/sponsors/requests",
                                 "/api/sponsors/requests/**",
+                                "/api/chat-rooms/**",
+                                "/api/messages/**",
                                 "/error"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
