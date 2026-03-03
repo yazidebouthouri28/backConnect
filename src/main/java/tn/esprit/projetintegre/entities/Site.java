@@ -54,10 +54,13 @@ public class Site {
 
     @ElementCollection
     @CollectionTable(name = "site_images", joinColumns = @JoinColumn(name = "site_id"))
-    @Column(name = "image_url")
+    @Lob
+    @Column(name = "image_url", columnDefinition = "LONGTEXT")
     @Builder.Default
     private List<String> images = new ArrayList<>();
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String thumbnail;
 
     @ElementCollection
@@ -87,6 +90,11 @@ public class Site {
     private String contactPhone;
     private String contactEmail;
     private String website;
+
+    private String checkInTime;
+    private String checkOutTime;
+    @Column(length = 1000)
+    private String houseRules;
 
     @OneToMany(mappedBy = "site", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

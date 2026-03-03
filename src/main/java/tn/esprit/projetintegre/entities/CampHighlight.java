@@ -32,6 +32,8 @@ public class CampHighlight {
     @NotNull(message = "Category is required")
     private HighlightCategory category;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
 
     @Builder.Default

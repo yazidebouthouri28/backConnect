@@ -27,8 +27,12 @@ public class Scene360 {
     private String description;
 
     @NotBlank(message = "Image URL is required")
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String thumbnailUrl;
 
     @Builder.Default

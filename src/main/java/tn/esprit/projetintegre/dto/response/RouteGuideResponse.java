@@ -9,10 +9,16 @@ public class RouteGuideResponse {
     private Long id;
     private String name;
     private String description;
+    private String originCity;
+    private Double distanceKm;
     private Integer estimatedDurationMinutes;
     private Double distanceMeters;
     private String difficulty;
+    private String instructions;
+    private String mapUrl;
     private List<Long> sceneOrder;
     private List<String> waypoints;
     private Boolean isActive;
+    private Long siteId;
+    private Long virtualTourId;
 }

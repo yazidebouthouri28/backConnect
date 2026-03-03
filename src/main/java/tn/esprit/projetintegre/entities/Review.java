@@ -53,6 +53,10 @@ public class Review {
     @JoinColumn(name = "site_id", nullable = false)
     private Site site;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

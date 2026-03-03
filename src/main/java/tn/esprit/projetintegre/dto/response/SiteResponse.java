@@ -31,6 +31,9 @@ public class SiteResponse {
     private Integer reviewCount;
     private Long ownerId;
     private String ownerName;
+    private String checkInTime;
+    private String checkOutTime;
+    private String houseRules;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

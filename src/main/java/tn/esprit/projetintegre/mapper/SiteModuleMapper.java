@@ -16,6 +16,8 @@ public class SiteModuleMapper {
     public Site toEntity(SiteRequest request) {
         if (request == null)
             return null;
+        List<String> images = request.getImages() != null ? request.getImages() : new java.util.ArrayList<>();
+        String thumbnail = images.isEmpty() ? null : images.get(0);
         return Site.builder()
                 .name(request.getName())
                 .description(request.getDescription())
@@ -27,11 +29,15 @@ public class SiteModuleMapper {
                 .longitude(request.getLongitude())
                 .capacity(request.getCapacity())
                 .pricePerNight(request.getPricePerNight())
-                .images(request.getImages() != null ? request.getImages() : new java.util.ArrayList<>())
+                .images(images)
+                .thumbnail(thumbnail)
                 .amenities(request.getAmenities() != null ? request.getAmenities() : new java.util.ArrayList<>())
                 .contactPhone(request.getContactPhone())
                 .contactEmail(request.getContactEmail())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .checkInTime(request.getCheckInTime())
+                .checkOutTime(request.getCheckOutTime())
+                .houseRules(request.getHouseRules())
                 .build();
     }
 
@@ -58,6 +64,9 @@ public class SiteModuleMapper {
                 .rating(entity.getAverageRating()) // averageRating directly mapped to rating
                 .reviewCount(entity.getReviewCount())
                 // No owner mapping here as owner might be User entity not exposed like this yet
+                .checkInTime(entity.getCheckInTime())
+                .checkOutTime(entity.getCheckOutTime())
+                .houseRules(entity.getHouseRules())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -67,6 +76,38 @@ public class SiteModuleMapper {
         if (entities == null)
             return Collections.emptyList();
         return entities.stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    public SiteSummaryResponse toSummaryResponse(Site entity) {
+        if (entity == null)
+            return null;
+        return SiteSummaryResponse.builder()
+                .id(entity.getId())
+                .name(entity.getName())
+                .description(entity.getDescription())
+                .type(entity.getType())
+                .address(entity.getAddress())
+                .city(entity.getCity())
+                .country(entity.getCountry())
+                .latitude(entity.getLatitude())
+                .longitude(entity.getLongitude())
+                .capacity(entity.getCapacity())
+                .pricePerNight(entity.getPricePerNight())
+                .image(entity.getThumbnail())
+                .amenities(entity.getAmenities())
+                .isActive(entity.getIsActive())
+                .rating(entity.getAverageRating())
+                .reviewCount(entity.getReviewCount())
+                .checkInTime(entity.getCheckInTime())
+                .checkOutTime(entity.getCheckOutTime())
+                .houseRules(entity.getHouseRules())
+                .build();
+    }
+
+    public List<SiteSummaryResponse> toSiteSummaryResponseList(List<Site> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toSummaryResponse).collect(Collectors.toList());
     }
 
     public void updateEntity(Site entity, SiteRequest request) {
@@ -82,14 +123,19 @@ public class SiteModuleMapper {
         entity.setLongitude(request.getLongitude());
         entity.setCapacity(request.getCapacity());
         entity.setPricePerNight(request.getPricePerNight());
-        if (request.getImages() != null)
+        if (request.getImages() != null) {
             entity.setImages(request.getImages());
+            entity.setThumbnail(request.getImages().isEmpty() ? null : request.getImages().get(0));
+        }
         if (request.getAmenities() != null)
             entity.setAmenities(request.getAmenities());
         entity.setContactPhone(request.getContactPhone());
         entity.setContactEmail(request.getContactEmail());
         if (request.getIsActive() != null)
             entity.setIsActive(request.getIsActive());
+        entity.setCheckInTime(request.getCheckInTime());
+        entity.setCheckOutTime(request.getCheckOutTime());
+        entity.setHouseRules(request.getHouseRules());
     }
 
     // ----------- VIRTUAL TOUR -----------
@@ -244,11 +290,17 @@ public class SiteModuleMapper {
                 .id(entity.getId())
                 .name(entity.getName())
                 .description(entity.getDescription())
+                .originCity(entity.getOriginCity())
+                .distanceKm(entity.getDistanceKm())
                 .estimatedDurationMinutes(entity.getEstimatedDurationMinutes())
                 .distanceMeters(entity.getDistanceKm() != null ? entity.getDistanceKm() * 1000 : null)
                 .difficulty(entity.getDifficulty())
+                .instructions(entity.getInstructions())
+                .mapUrl(entity.getMapUrl())
                 .waypoints(entity.getWaypoints())
                 .isActive(entity.getIsActive())
+                .siteId(entity.getSite() != null ? entity.getSite().getId() : null)
+                .virtualTourId(entity.getVirtualTour() != null ? entity.getVirtualTour().getId() : null)
                 .build();
     }
 
@@ -295,11 +347,15 @@ public class SiteModuleMapper {
                 .approved(entity.getApproved())
                 .response(entity.getResponse())
                 .respondedAt(entity.getRespondedAt())
-                .targetType(tn.esprit.projetintegre.enums.ReviewTargetType.SITE) // Target Type est tjr site pour cette
-                                                                                 // entity
+                .targetType(tn.esprit.projetintegre.enums.ReviewTargetType.SITE)
                 .targetId(entity.getSite() != null ? entity.getSite().getId() : null)
-                .userId(null) // L'entité n'a pas userId mapped explicitement vers Review dans cet exemple ?
-                              // Non, wait
+                .userId(entity.getUser() != null ? entity.getUser().getId() : null)
+                .userName(entity.getUser() != null
+                        ? (entity.getUser().getName() != null && !entity.getUser().getName().isBlank()
+                                ? entity.getUser().getName()
+                                : entity.getUser().getUsername())
+                        : null)
+                .userAvatar(entity.getUser() != null ? entity.getUser().getAvatar() : null)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -357,8 +413,10 @@ public class SiteModuleMapper {
                 .documentUrl(entity.getDocumentUrl())
                 .verificationUrl(entity.getVerificationUrl())
                 .score(entity.getScore())
+                .siteId(entity.getSite() != null ? entity.getSite().getId() : null)
                 .userId(entity.getSite() != null ? entity.getSite().getId() : null) // Using siteId as userId in
                                                                                     // response due to generic naming
+                .items(toCertificationItemResponseList(entity.getCertificationItems()))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -412,6 +470,9 @@ public class SiteModuleMapper {
                 .requiredScore(entity.getRequiredScore())
                 .passed(entity.getPassed())
                 .completedAt(entity.getCompletedAt())
+                .criteriaName(entity.getCriteriaName())
+                .comment(entity.getComment())
+                .certificationId(entity.getCertification() != null ? entity.getCertification().getId() : null)
                 .build();
     }
 
@@ -468,3 +529,4 @@ public class SiteModuleMapper {
         return entities.stream().map(this::toResponse).collect(Collectors.toList());
     }
 }
+

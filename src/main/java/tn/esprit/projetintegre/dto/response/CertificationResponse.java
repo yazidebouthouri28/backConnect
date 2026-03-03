@@ -20,6 +20,7 @@ public class CertificationResponse {
     private String documentUrl;
     private String verificationUrl;
     private Integer score;
+    private Long siteId;
     private Long userId;
     private String userName;
     private List<CertificationItemResponse> items;

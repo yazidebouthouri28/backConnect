@@ -1,6 +1,7 @@
 package tn.esprit.projetintegre.dto.response;
 
 import lombok.*;
+import tn.esprit.projetintegre.enums.CriterieName;
 
 import java.time.LocalDateTime;
 
@@ -13,4 +14,7 @@ public class CertificationItemResponse {
     private Integer requiredScore;
     private Boolean passed;
     private LocalDateTime completedAt;
+    private CriterieName criteriaName;
+    private String comment;
+    private Long certificationId;
 }

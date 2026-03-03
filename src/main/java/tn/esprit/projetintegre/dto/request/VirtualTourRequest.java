@@ -19,6 +19,5 @@ public class VirtualTourRequest {
     private Integer durationMinutes;
     @Builder.Default
     private Boolean isFeatured = false;
-    @NotNull(message = "Site ID is required")
     private Long siteId;
 }

@@ -26,6 +26,8 @@ public class VirtualTour {
     @Column(length = 2000)
     private String description;
 
+    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String thumbnailUrl;
 
     @Min(value = 0, message = "Duration must be positive")

@@ -41,5 +41,8 @@ public class SiteRequest {
     private String contactPhone;
     private String contactEmail;
     private Boolean isActive;
+    private String checkInTime;
+    private String checkOutTime;
+    private String houseRules;
     private Long ownerId;
 }
