@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "InventoryLowStockEvent",
+  "description": "Published when product stock falls below threshold",
+  "topic": "inventory.low-stock",
+  "type": "object",
+  "required": ["eventType", "productId", "stockQuantity", "timestamp"],
+  "properties": {
+    "eventType": { "type": "string", "const": "LOW_STOCK" },
+    "productId": { "type": "integer" },
+    "productName": { "type": "string" },
+    "sku": { "type": "string" },
+    "stockQuantity": { "type": "integer" },
+    "sellerId": { "type": "integer" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "example": {
+    "eventType": "LOW_STOCK",
+    "productId": 123,
+    "productName": "Wireless Headphones",
+    "sku": "WH-001",
+    "stockQuantity": 3,
+    "sellerId": 42,
+    "timestamp": "2026-03-20T17:00:00"
+  }
+}

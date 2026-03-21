@@ -1,0 +1,119 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      # ============================
+      # Global CORS Configuration
+      # ============================
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+            maxAge: 3600
+
+      # ============================
+      # Default Filters
+      # ============================
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+
+      # ============================
+      # Route Definitions
+      # ============================
+      routes:
+        # --- Authentication Routes (NO JWT required) ---
+        - id: auth-service
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=0
+
+        # --- User Service Routes ---
+        - id: user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/**, /api/wallets/**, /api/wishlists/**, /api/transactions/**
+          filters:
+            - StripPrefix=0
+            - JwtAuthentication
+
+        # --- Product Service Routes ---
+        - id: product-service
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/products/**, /api/categories/**, /api/reviews/**
+          filters:
+            - StripPrefix=0
+            - JwtAuthentication
+
+        # --- Product Service Public Routes (no auth for browsing) ---
+        - id: product-service-public
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/products
+            - Method=GET
+          filters:
+            - StripPrefix=0
+          order: -1  # Higher priority (processed first)
+
+        # --- Order Service Routes ---
+        - id: order-service
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/orders/**, /api/cart/**, /api/shipping-addresses/**, /api/inventory/**, /api/warehouses/**, /api/rentals/**
+          filters:
+            - StripPrefix=0
+            - JwtAuthentication
+
+  # ============================
+  # Redis Configuration
+  # ============================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+# ============================
+# JWT Configuration
+# ============================
+jwt:
+  secret: ${JWT_SECRET:YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!}
+
+# ============================
+# Actuator
+# ============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    gateway:
+      enabled: true
+    health:
+      show-details: always
+
+# ============================
+# Logging
+# ============================
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    tn.esprit.gateway: DEBUG

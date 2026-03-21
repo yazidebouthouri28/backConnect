@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProductUpdatedEvent",
+  "description": "Published when a product is modified",
+  "topic": "product.updated",
+  "type": "object",
+  "required": ["eventType", "productId", "timestamp"],
+  "properties": {
+    "eventType": { "type": "string", "const": "UPDATED" },
+    "productId": { "type": "integer" },
+    "productName": { "type": "string" },
+    "sku": { "type": "string" },
+    "price": { "type": "number" },
+    "stockQuantity": { "type": "integer" },
+    "isActive": { "type": "boolean" },
+    "changes": {
+      "type": "object",
+      "description": "Map of changed fields to their new values",
+      "additionalProperties": true
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "example": {
+    "eventType": "UPDATED",
+    "productId": 123,
+    "productName": "Wireless Headphones Pro",
+    "price": 59.99,
+    "changes": { "price": 59.99, "productName": "Wireless Headphones Pro" },
+    "timestamp": "2026-03-20T15:00:00"
+  }
+}

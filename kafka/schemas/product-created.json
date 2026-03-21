@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProductCreatedEvent",
+  "description": "Published when a new product is added to the catalog",
+  "topic": "product.created",
+  "type": "object",
+  "required": ["eventType", "productId", "productName", "price", "stockQuantity", "timestamp"],
+  "properties": {
+    "eventType": { "type": "string", "const": "CREATED" },
+    "productId": { "type": "integer", "description": "Unique product ID" },
+    "productName": { "type": "string" },
+    "sku": { "type": "string" },
+    "price": { "type": "number", "minimum": 0 },
+    "stockQuantity": { "type": "integer", "minimum": 0 },
+    "categoryId": { "type": "integer" },
+    "sellerId": { "type": "integer" },
+    "isActive": { "type": "boolean" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "example": {
+    "eventType": "CREATED",
+    "productId": 123,
+    "productName": "Wireless Headphones",
+    "sku": "WH-001",
+    "price": 49.99,
+    "stockQuantity": 100,
+    "categoryId": 5,
+    "sellerId": 42,
+    "isActive": true,
+    "timestamp": "2026-03-20T14:30:00"
+  }
+}
