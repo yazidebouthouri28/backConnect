@@ -1,7 +1,7 @@
 package tn.esprit.projetintegre.dto.response;
 
 import lombok.*;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 
 import java.time.LocalDateTime;
 

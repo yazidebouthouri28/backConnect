@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.PageResponse;
 import tn.esprit.projetintegre.entities.Complaint;
-import tn.esprit.projetintegre.enums.ComplaintStatus;
+import tn.esprit.projetintegre.entities.ComplaintStatus;
 import tn.esprit.projetintegre.dto.response.ComplaintResponse;
 import tn.esprit.projetintegre.mapper.DtoMapper;
 import tn.esprit.projetintegre.services.ComplaintService;

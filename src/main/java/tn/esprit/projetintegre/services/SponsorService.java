@@ -9,7 +9,7 @@ import tn.esprit.projetintegre.entities.Event;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
 import tn.esprit.projetintegre.entities.User;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.EventRepository;

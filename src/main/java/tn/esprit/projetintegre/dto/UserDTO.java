@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

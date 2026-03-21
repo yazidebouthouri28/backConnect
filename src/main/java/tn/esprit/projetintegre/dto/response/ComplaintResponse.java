@@ -1,7 +1,7 @@
 package tn.esprit.projetintegre.dto.response;
 
 import lombok.*;
-import tn.esprit.projetintegre.enums.ComplaintStatus;
+import tn.esprit.projetintegre.entities.ComplaintStatus;
 
 import java.time.LocalDateTime;
 

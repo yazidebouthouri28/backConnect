@@ -11,11 +11,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "products", indexes = {
-    @Index(name = "idx_product_category", columnList = "category_id"),
-    @Index(name = "idx_product_seller", columnList = "seller_id"),
-    @Index(name = "idx_product_active", columnList = "isActive"),
-    @Index(name = "idx_product_price", columnList = "price"),
-    @Index(name = "idx_product_sku", columnList = "sku")
+        @Index(name = "idx_product_category", columnList = "category_id"),
+        @Index(name = "idx_product_seller", columnList = "seller_id"),
+        @Index(name = "idx_product_active", columnList = "isActive"),
+        @Index(name = "idx_product_price", columnList = "price"),
+        @Index(name = "idx_product_sku", columnList = "sku")
 })
 @Getter
 @Setter
@@ -55,10 +55,10 @@ public class Product {
     @Size(max = 50, message = "Le SKU ne peut pas dépasser 50 caractères")
     @Column(unique = true)
     private String sku;
-    
+
     @Size(max = 50, message = "Le code-barres ne peut pas dépasser 50 caractères")
     private String barcode;
-    
+
     @Size(max = 100, message = "La marque ne peut pas dépasser 100 caractères")
     private String brand;
 
@@ -74,15 +74,15 @@ public class Product {
     @Min(value = 0, message = "La quantité en stock ne peut pas être négative")
     @Builder.Default
     private Integer stockQuantity = 0;
-    
+
     @Min(value = 0, message = "Le niveau de stock minimum ne peut pas être négatif")
     @Builder.Default
     private Integer minStockLevel = 5;
-    
+
     @Min(value = 1, message = "Le niveau de stock maximum doit être au moins 1")
     @Builder.Default
     private Integer maxStockLevel = 1000;
-    
+
     @Builder.Default
     private Boolean trackInventory = true;
 
@@ -100,28 +100,28 @@ public class Product {
     @Column(precision = 3, scale = 2)
     @Builder.Default
     private BigDecimal rating = BigDecimal.ZERO;
-    
+
     @Min(value = 0, message = "Le nombre d'avis ne peut pas être négatif")
     @Builder.Default
     private Integer reviewCount = 0;
-    
+
     @Min(value = 0, message = "Le nombre de ventes ne peut pas être négatif")
     @Builder.Default
     private Integer salesCount = 0;
-    
+
     @Min(value = 0, message = "Le nombre de vues ne peut pas être négatif")
     @Builder.Default
     private Integer viewCount = 0;
 
     @Builder.Default
     private Boolean isActive = true;
-    
+
     @Builder.Default
     private Boolean isFeatured = false;
-    
+
     @Builder.Default
     private Boolean isOnSale = false;
-    
+
     @Builder.Default
     private Boolean isRentable = false;
 
@@ -131,7 +131,7 @@ public class Product {
 
     @DecimalMin(value = "0.00", message = "Le poids ne peut pas être négatif")
     private Double weight;
-    
+
     @Size(max = 100, message = "Les dimensions ne peuvent pas dépasser 100 caractères")
     private String dimensions;
 
@@ -157,16 +157,271 @@ public class Product {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (stockQuantity == null) stockQuantity = 0;
-        if (reviewCount == null) reviewCount = 0;
-        if (salesCount == null) salesCount = 0;
-        if (viewCount == null) viewCount = 0;
-        if (rating == null) rating = BigDecimal.ZERO;
-        if (isActive == null) isActive = true;
+        if (stockQuantity == null)
+            stockQuantity = 0;
+        if (reviewCount == null)
+            reviewCount = 0;
+        if (salesCount == null)
+            salesCount = 0;
+        if (viewCount == null)
+            viewCount = 0;
+        if (rating == null)
+            rating = BigDecimal.ZERO;
+        if (isActive == null)
+            isActive = true;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    // Manual Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public BigDecimal getOriginalPrice() {
+        return originalPrice;
+    }
+
+    public void setOriginalPrice(BigDecimal originalPrice) {
+        this.originalPrice = originalPrice;
+    }
+
+    public BigDecimal getDiscountPercentage() {
+        return discountPercentage;
+    }
+
+    public void setDiscountPercentage(BigDecimal discountPercentage) {
+        this.discountPercentage = discountPercentage;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
+    }
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public User getSeller() {
+        return seller;
+    }
+
+    public void setSeller(User seller) {
+        this.seller = seller;
+    }
+
+    public Integer getStockQuantity() {
+        return stockQuantity;
+    }
+
+    public void setStockQuantity(Integer stockQuantity) {
+        this.stockQuantity = stockQuantity;
+    }
+
+    public Integer getMinStockLevel() {
+        return minStockLevel;
+    }
+
+    public void setMinStockLevel(Integer minStockLevel) {
+        this.minStockLevel = minStockLevel;
+    }
+
+    public Integer getMaxStockLevel() {
+        return maxStockLevel;
+    }
+
+    public void setMaxStockLevel(Integer maxStockLevel) {
+        this.maxStockLevel = maxStockLevel;
+    }
+
+    public Boolean getTrackInventory() {
+        return trackInventory;
+    }
+
+    public void setTrackInventory(Boolean trackInventory) {
+        this.trackInventory = trackInventory;
+    }
+
+    public List<String> getImages() {
+        return images;
+    }
+
+    public void setImages(List<String> images) {
+        this.images = images;
+    }
+
+    public String getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
+    public BigDecimal getRating() {
+        return rating;
+    }
+
+    public void setRating(BigDecimal rating) {
+        this.rating = rating;
+    }
+
+    public Integer getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(Integer reviewCount) {
+        this.reviewCount = reviewCount;
+    }
+
+    public Integer getSalesCount() {
+        return salesCount;
+    }
+
+    public void setSalesCount(Integer salesCount) {
+        this.salesCount = salesCount;
+    }
+
+    public Integer getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Integer viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Boolean getIsFeatured() {
+        return isFeatured;
+    }
+
+    public void setIsFeatured(Boolean isFeatured) {
+        this.isFeatured = isFeatured;
+    }
+
+    public Boolean getIsOnSale() {
+        return isOnSale;
+    }
+
+    public void setIsOnSale(Boolean isOnSale) {
+        this.isOnSale = isOnSale;
+    }
+
+    public Boolean getIsRentable() {
+        return isRentable;
+    }
+
+    public void setIsRentable(Boolean isRentable) {
+        this.isRentable = isRentable;
+    }
+
+    public BigDecimal getRentalPricePerDay() {
+        return rentalPricePerDay;
+    }
+
+    public void setRentalPricePerDay(BigDecimal rentalPricePerDay) {
+        this.rentalPricePerDay = rentalPricePerDay;
+    }
+
+    public Double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(Double weight) {
+        this.weight = weight;
+    }
+
+    public String getDimensions() {
+        return dimensions;
+    }
+
+    public void setDimensions(String dimensions) {
+        this.dimensions = dimensions;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

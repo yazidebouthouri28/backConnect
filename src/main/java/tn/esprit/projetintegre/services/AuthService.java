@@ -13,7 +13,7 @@ import tn.esprit.projetintegre.dto.RegisterRequest;
 import tn.esprit.projetintegre.entities.Cart;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.entities.Wallet;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 import tn.esprit.projetintegre.enums.SponsorStatus;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.repositories.CartRepository;

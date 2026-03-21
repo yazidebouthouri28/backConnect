@@ -14,7 +14,7 @@ import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.PageResponse;
 import tn.esprit.projetintegre.dto.UserDTO;
 import tn.esprit.projetintegre.entities.User;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 import tn.esprit.projetintegre.services.UserService;
 
 import java.util.List;

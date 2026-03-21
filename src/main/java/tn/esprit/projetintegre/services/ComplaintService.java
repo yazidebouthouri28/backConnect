@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Complaint;
 import tn.esprit.projetintegre.entities.User;
-import tn.esprit.projetintegre.enums.ComplaintStatus;
+import tn.esprit.projetintegre.entities.ComplaintStatus;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.ComplaintRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;

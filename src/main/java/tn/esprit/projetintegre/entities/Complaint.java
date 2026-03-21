@@ -3,7 +3,7 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import tn.esprit.projetintegre.enums.ComplaintStatus;
+import tn.esprit.projetintegre.entities.ComplaintStatus;
 
 import java.time.LocalDateTime;
 

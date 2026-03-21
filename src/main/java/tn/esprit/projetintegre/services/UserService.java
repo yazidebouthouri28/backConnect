@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.dto.UserDTO;
 import tn.esprit.projetintegre.entities.User;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.UserRepository;
 

@@ -1,7 +1,7 @@
 package tn.esprit.projetintegre.dto.request;
 
 import lombok.*;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 
 @Data
 @Builder

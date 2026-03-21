@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.User;
-import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.entities.Role;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
 import java.math.BigDecimal;

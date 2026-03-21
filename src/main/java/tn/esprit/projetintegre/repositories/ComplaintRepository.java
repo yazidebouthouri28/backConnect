@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import tn.esprit.projetintegre.entities.Complaint;
-import tn.esprit.projetintegre.enums.ComplaintStatus;
+import tn.esprit.projetintegre.entities.ComplaintStatus;
 
 import java.util.Optional;
 
