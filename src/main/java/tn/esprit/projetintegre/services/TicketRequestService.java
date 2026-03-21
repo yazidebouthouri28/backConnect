@@ -32,7 +32,8 @@ public class TicketRequestService {
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé avec l'ID: " + userId));
 
         Event event = eventRepository.findById(request.getEventId())
-                .orElseThrow(() -> new ResourceNotFoundException("Événement non trouvé avec l'ID: " + request.getEventId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Événement non trouvé avec l'ID: " + request.getEventId()));
 
         // Vérifier si l'événement est actif
         if (event.getStatus() != tn.esprit.projetintegre.enums.EventStatus.PUBLISHED) {
@@ -76,7 +77,8 @@ public class TicketRequestService {
     @Transactional(readOnly = true)
     public TicketRequestDTO.Response getByRequestNumber(String requestNumber) {
         TicketRequest request = ticketRequestRepository.findByRequestNumber(requestNumber)
-                .orElseThrow(() -> new ResourceNotFoundException("Demande de billet non trouvée avec le numéro: " + requestNumber));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Demande de billet non trouvée avec le numéro: " + requestNumber));
         return toResponse(request);
     }
 
@@ -121,7 +123,8 @@ public class TicketRequestService {
         return toResponse(ticketRequest);
     }
 
-    public TicketRequestDTO.Response processRequest(Long id, Long processedById, TicketRequestDTO.ProcessRequest request) {
+    public TicketRequestDTO.Response processRequest(Long id, Long processedById,
+            TicketRequestDTO.ProcessRequest request) {
         TicketRequest ticketRequest = ticketRequestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Demande de billet non trouvée avec l'ID: " + id));
 
@@ -182,7 +185,7 @@ public class TicketRequestService {
                 .userId(request.getUser().getId())
                 .userName(request.getUser().getName())
                 .eventId(request.getEvent().getId())
-                .eventTitle(request.getEvent().getTitle())
+                .eventTitle(request.getEvent().getDescription())
                 .processedById(request.getProcessedBy() != null ? request.getProcessedBy().getId() : null)
                 .processedByName(request.getProcessedBy() != null ? request.getProcessedBy().getName() : null)
                 .createdAt(request.getCreatedAt())

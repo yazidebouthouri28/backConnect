@@ -15,7 +15,7 @@ import java.util.List;
         @Index(name = "idx_event_status", columnList = "status"),
         @Index(name = "idx_event_organizer", columnList = "organizer_id"),
         @Index(name = "idx_event_site", columnList = "site_id"),
-        @Index(name = "idx_event_dates", columnList = "startDate,endDate"),
+        @Index(name = "idx_event_dates", columnList = "endDate"),
         @Index(name = "idx_event_category", columnList = "category")
 })
 @Getter
@@ -29,12 +29,15 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le titre de l'événement est obligatoire")
-    @Size(min = 3, max = 200, message = "Le titre doit contenir entre 3 et 200 caractères")
-    @Column(nullable = false)
-    private String title;
+    @NotBlank(message = "Le nom est obligatoire")
+    @Size(max = 200, message = "Le nom ne peut pas dépasser 200 caractères")
+    private String name;
+
+    @Size(max = 500, message = "L'URL de la photo ne peut pas dépasser 500 caractères")
+    private String picture;
 
     @Column(length = 2000)
+    @NotBlank(message = "La description est obligatoire")
     @Size(max = 2000, message = "La description ne peut pas dépasser 2000 caractères")
     private String description;
 
@@ -47,21 +50,17 @@ public class Event {
     @NotNull(message = "L'organisateur est obligatoire")
     private Organizer organizer;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "event_type")
-    private tn.esprit.projetintegre.enums.EventType eventType;
+    @NotBlank(message = "Le type d'événement est obligatoire")
+    private String eventType;
 
+    @NotBlank(message = "La catégorie est obligatoire")
     @Size(max = 100, message = "La catégorie ne peut pas dépasser 100 caractères")
     private String category;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
     private EventStatus status = EventStatus.DRAFT;
-
-    @NotNull(message = "La date de début est obligatoire")
-    @FutureOrPresent(message = "La date de début doit être dans le présent ou le futur")
-    private LocalDateTime startDate;
 
     @NotNull(message = "La date de fin est obligatoire")
     private LocalDateTime endDate;
@@ -92,22 +91,9 @@ public class Event {
     @Size(max = 500, message = "L'URL de la miniature ne peut pas dépasser 500 caractères")
     private String thumbnail;
 
+    @NotBlank(message = "Le lieu est obligatoire")
     @Size(max = 500, message = "Le lieu ne peut pas dépasser 500 caractères")
     private String location;
-
-    @DecimalMin(value = "-90.0", message = "Latitude invalide")
-    @DecimalMax(value = "90.0", message = "Latitude invalide")
-    private Double latitude;
-
-    @DecimalMin(value = "-180.0", message = "Longitude invalide")
-    @DecimalMax(value = "180.0", message = "Longitude invalide")
-    private Double longitude;
-
-    @Builder.Default
-    private Boolean isPublic = true;
-
-    @Builder.Default
-    private Boolean requiresApproval = false;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
@@ -126,44 +112,45 @@ public class Event {
     @Builder.Default
     private Integer reviewCount = 0;
 
-    @Min(value = 0, message = "Le nombre de vues ne peut pas être négatif")
+    @Min(value = 0, message = "Le nombre de likes ne peut pas être négatif")
     @Builder.Default
-    private Integer viewCount = 0;
+    private Integer likesCount = 0;
+
+    @Min(value = 0, message = "Le nombre de dislikes ne peut pas être négatif")
+    @Builder.Default
+    private Integer dislikesCount = 0;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
         if (status == null)
             status = EventStatus.DRAFT;
         if (currentParticipants == null)
             currentParticipants = 0;
         if (reviewCount == null)
             reviewCount = 0;
-        if (viewCount == null)
-            viewCount = 0;
+        if (likesCount == null)
+            likesCount = 0;
+        if (dislikesCount == null)
+            dislikesCount = 0;
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public Integer getLikesCount() {
+        return likesCount;
     }
 
-    @AssertTrue(message = "La date de fin doit être après la date de début")
-    private boolean isEndDateAfterStartDate() {
-        if (startDate == null || endDate == null)
-            return true;
-        return endDate.isAfter(startDate);
+    public void setLikesCount(Integer likesCount) {
+        this.likesCount = likesCount;
     }
 
-    @AssertTrue(message = "La date limite d'inscription doit être avant la date de début")
-    private boolean isRegistrationDeadlineBeforeStart() {
-        if (registrationDeadline == null || startDate == null)
-            return true;
-        return registrationDeadline.isBefore(startDate);
+    public Integer getDislikesCount() {
+        return dislikesCount;
+    }
+
+    public void setDislikesCount(Integer dislikesCount) {
+        this.dislikesCount = dislikesCount;
     }
 }

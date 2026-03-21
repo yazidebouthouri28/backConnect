@@ -52,7 +52,6 @@ public class EventController {
     @GetMapping("/{id}")
     @Operation(summary = "Get event by ID")
     public ResponseEntity<ApiResponse<EventResponse>> getEventById(@PathVariable Long id) {
-        eventService.incrementViewCount(id);
         Event event = eventService.getEventById(id);
         return ResponseEntity.ok(ApiResponse.success(dtoMapper.toEventResponse(event)));
     }
@@ -120,26 +119,20 @@ public class EventController {
 
     private Event mapToEvent(EventRequest request) {
         return Event.builder()
-                .title(request.getTitle())
+                .name(request.getName())
+                .picture(request.getPicture())
                 .description(request.getDescription())
-                .eventType(request.getEventType() != null
-                        ? tn.esprit.projetintegre.enums.EventType.valueOf(request.getEventType())
-                        : null)
+                .eventType(request.getEventType())
                 .category(request.getCategory())
-                .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .location(request.getLocation())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .maxParticipants(request.getMaxParticipants())
-                .price(request.getPrice())
                 .isFree(request.getIsFree())
-                .isPublic(request.getIsPublic())
-                .requiresApproval(request.getRequiresApproval())
                 .images(request.getImages())
                 .thumbnail(request.getThumbnail())
                 .status(request.getStatus())
                 .registrationDeadline(request.getRegistrationDeadline())
+                .maxParticipants(request.getMaxParticipants())
+                .price(request.getPrice())
                 .build();
     }
 
@@ -167,6 +160,6 @@ public class EventController {
     @Operation(summary = "Delete/Cancel an event")
     public ResponseEntity<ApiResponse<Void>> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
-        return ResponseEntity.ok(ApiResponse.success("Event cancelled", null));
+        return ResponseEntity.ok(ApiResponse.success("Événement supprimé avec succès", null));
     }
 }

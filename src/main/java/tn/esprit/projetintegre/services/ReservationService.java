@@ -59,9 +59,9 @@ public class ReservationService {
 
     @Transactional
     public Reservation createSiteReservation(Long userId, Long siteId, LocalDateTime checkIn,
-                                              LocalDateTime checkOut, int numberOfGuests,
-                                              String guestName, String guestEmail, String guestPhone,
-                                              String specialRequests) {
+            LocalDateTime checkOut, int numberOfGuests,
+            String guestName, String guestEmail, String guestPhone,
+            String specialRequests) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Site site = siteRepository.findById(siteId)
@@ -98,21 +98,21 @@ public class ReservationService {
 
     @Transactional
     public Reservation createEventReservation(Long userId, Long eventId, String guestName,
-                                               String guestEmail, String guestPhone) {
+            String guestEmail, String guestPhone) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found"));
 
-        if (event.getMaxParticipants() != null && 
-            event.getCurrentParticipants() >= event.getMaxParticipants()) {
+        if (event.getMaxParticipants() != null &&
+                event.getCurrentParticipants() >= event.getMaxParticipants()) {
             throw new IllegalStateException("Event is fully booked");
         }
 
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .event(event)
-                .checkInDate(event.getStartDate())
+                .checkInDate(event.getEndDate())
                 .checkOutDate(event.getEndDate())
                 .numberOfGuests(1)
                 .totalPrice(event.getIsFree() ? BigDecimal.ZERO : event.getPrice())

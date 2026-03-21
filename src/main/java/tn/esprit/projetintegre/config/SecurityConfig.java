@@ -29,125 +29,129 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final UserDetailsService userDetailsService;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final UserDetailsService userDetailsService;
 
-    // Public endpoints that don't require authentication
-    private static final String[] PUBLIC_ENDPOINTS = {
-            "/auth/**",
-            "/api/auth/**",
-            "/api/public/**",
-            "/v3/api-docs/**",
-            "/swagger-ui/**",
-            "/swagger-ui.html",
-            "/swagger-resources/**",
-            "/webjars/**",
-            "/error",
-            "/actuator/**"
-    };
+        // Public endpoints that don't require authentication
+        private static final String[] PUBLIC_ENDPOINTS = {
+                        "/auth/**",
+                        "/api/auth/**",
+                        "/api/public/**",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-resources/**",
+                        "/webjars/**",
+                        "/error",
+                        "/actuator/**",
+                        "/uploads/**"
+        };
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                // Disable CSRF for REST API
-                .csrf(csrf -> csrf.disable())
-                
-                // Configure CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                
-                // Stateless session management for JWT
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                
-                // Configure authorization rules
-                .authorizeHttpRequests(auth -> auth
-                        // Allow all OPTIONS requests (preflight)
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        
-                        // Allow public endpoints without authentication
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                        
-                        // Allow public product and category browsing
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/warehouses/**").permitAll()
-                        
-                        // Admin only endpoints
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        
-                        // All other requests require authentication
-                        .anyRequest().authenticated()
-                )
-                
-                // Set authentication provider
-                .authenticationProvider(authenticationProvider())
-                
-                // Add JWT filter before UsernamePasswordAuthenticationFilter
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+                http
+                                // Disable CSRF for REST API
+                                .csrf(csrf -> csrf.disable())
 
-        return http.build();
-    }
+                                // Configure CORS
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        
-        // Allow specific origins
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:4200",
-                "http://localhost:3000",
-                "http://127.0.0.1:4200",
-                "http://127.0.0.1:3000"
-        ));
-        
-        // Allow all HTTP methods
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
-        ));
-        
-        // Allow all headers
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With",
-                "Access-Control-Request-Method",
-                "Access-Control-Request-Headers"
-        ));
-        
-        // Expose headers
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Disposition"
-        ));
-        
-        // Allow credentials
-        configuration.setAllowCredentials(true);
-        
-        // Cache preflight response for 1 hour
-        configuration.setMaxAge(3600L);
+                                // Stateless session management for JWT
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                                // Configure authorization rules
+                                .authorizeHttpRequests(auth -> auth
+                                                // Allow all OPTIONS requests (preflight)
+                                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
+                                                // Allow public endpoints without authentication
+                                                .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+                                                // Allow public product and category browsing
+                                                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/warehouses/**").permitAll()
+                                                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+                                                .requestMatchers(HttpMethod.POST, "/api/events/*/like").authenticated()
+                                                .requestMatchers(HttpMethod.POST, "/api/events/*/dislike")
+                                                .authenticated()
+                                                .requestMatchers("/api/comments/**").authenticated()
+                                                .requestMatchers("/api/general-reviews/**").authenticated()
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+                                                // Admin only endpoints
+                                                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
+                                                // All other requests require authentication
+                                                .anyRequest().authenticated())
+
+                                // Set authentication provider
+                                .authenticationProvider(authenticationProvider())
+
+                                // Add JWT filter before UsernamePasswordAuthenticationFilter
+                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+                return http.build();
+        }
+
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration configuration = new CorsConfiguration();
+
+                // Allow specific origins (Angular dev ports + fallback)
+                configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:4200",
+                                "http://localhost:3000",
+                                "http://localhost:64748",
+                                "http://127.0.0.1:4200",
+                                "http://127.0.0.1:3000",
+                                "http://127.0.0.1:64748"));
+
+                // Allow all HTTP methods
+                configuration.setAllowedMethods(Arrays.asList(
+                                "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+
+                // Allow all headers
+                configuration.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "Accept",
+                                "Origin",
+                                "X-Requested-With",
+                                "Access-Control-Request-Method",
+                                "Access-Control-Request-Headers"));
+
+                // Expose headers
+                configuration.setExposedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Disposition"));
+
+                // Allow credentials
+                configuration.setAllowCredentials(true);
+
+                // Cache preflight response for 1 hour
+                configuration.setMaxAge(3600L);
+
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
+
+        @Bean
+        public AuthenticationProvider authenticationProvider() {
+                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+                authProvider.setUserDetailsService(userDetailsService);
+                authProvider.setPasswordEncoder(passwordEncoder());
+                return authProvider;
+        }
+
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+                return config.getAuthenticationManager();
+        }
+
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 }

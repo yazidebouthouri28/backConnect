@@ -18,9 +18,21 @@ public class EventCommentRequest {
     @Size(max = 1000, message = "Le commentaire ne peut pas dépasser 1000 caractères")
     private String content;
 
+    public String getContent() {
+        return content;
+    }
+
     @NotNull(message = "L'ID de l'événement est obligatoire")
     private Long eventId;
 
     @NotNull(message = "L'ID de l'utilisateur est obligatoire")
     private Long userId;
+
+    public Long getEventId() {
+        return eventId;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
 }
