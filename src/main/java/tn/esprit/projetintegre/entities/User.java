@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.enums.SponsorStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -115,6 +116,8 @@ public class User {
     private Integer experiencePoints = 0;
     private Integer level = 1;
     private Integer totalMissionsCompleted = 0;
+    @Enumerated(EnumType.STRING)
+    private SponsorStatus sponsorStatus; // null = not a sponsor request, PENDING, APPROVED, REJECTED
 
     @CreatedDate
     @Column(updatable = false)

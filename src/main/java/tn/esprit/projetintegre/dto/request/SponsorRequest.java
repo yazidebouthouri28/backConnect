@@ -1,11 +1,12 @@
+// SponsorRequest.java
 package tn.esprit.projetintegre.dto.request;
 
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
+import tn.esprit.projetintegre.enums.SponsorTier;
 
-// SponsorRequest.java
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -16,14 +17,9 @@ public class SponsorRequest {
     private String description;
     private String logo;
     private String website;
-    @Email(message = "Invalid email format")
     private String email;
     private String phone;
-    private String address;
-    private String city;
-    private String country;
     private String contactPerson;
-    private String contactPosition;
-    private String notes;
-    private Boolean isActive;
+    private SponsorTier tier;
+    // Ajoutez d'autres champs selon votre entité Sponsor
 }

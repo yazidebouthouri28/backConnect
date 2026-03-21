@@ -11,13 +11,12 @@ import tn.esprit.projetintegre.dto.AuthRequest;
 import tn.esprit.projetintegre.dto.AuthResponse;
 import tn.esprit.projetintegre.dto.RegisterRequest;
 import tn.esprit.projetintegre.entities.Cart;
-import tn.esprit.projetintegre.entities.Organizer;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.entities.Wallet;
 import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.enums.SponsorStatus;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.repositories.CartRepository;
-import tn.esprit.projetintegre.repositories.OrganizerRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
 import tn.esprit.projetintegre.repositories.WalletRepository;
 import tn.esprit.projetintegre.security.JwtTokenProvider;
@@ -31,10 +30,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final WalletRepository walletRepository;
-    private final OrganizerRepository organizerRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
-
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
@@ -46,17 +43,6 @@ public class AuthService {
             throw new DuplicateResourceException("Email already exists");
         }
 
-        Role role = Role.CLIENT; // Default role
-        if (request.getRole() != null) {
-            try {
-                role = Role.valueOf(request.getRole().toUpperCase());
-            } catch (IllegalArgumentException e) {
-                // Keep default or map specific frontend roles
-                if ("USER".equalsIgnoreCase(request.getRole()))
-                    role = Role.USER;
-            }
-        }
-
         User user = User.builder()
                 .name(request.getName())
                 .username(request.getUsername())
@@ -64,11 +50,13 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .address(request.getAddress())
-                .role(role)
+                .country(request.getCountry())
+                .role(request.getRole() != null ? request.getRole() : Role.USER)
+                .sponsorStatus(request.getRole() == Role.SPONSOR ? SponsorStatus.PENDING : null) // ← add this
                 .isActive(true)
                 .isSuspended(false)
-                .isBuyer(true)
-                .isSeller(role == Role.SELLER)
+                .isBuyer(request.getIsBuyer() != null ? request.getIsBuyer() : true)
+                .isSeller(request.getRole() == Role.SELLER)
                 .isAdmin(false)
                 .loyaltyPoints(0)
                 .loyaltyTier("BRONZE")
@@ -88,25 +76,10 @@ public class AuthService {
 
         String token = jwtTokenProvider.generateToken(user.getUsername());
 
-        Long organizerId = null;
-        if (role == Role.ORGANIZER) {
-            Organizer organizer = Organizer.builder()
-                    .user(user)
-                    .companyName(user.getName() + " Events")
-                    .verified(false)
-                    .active(true)
-                    .totalEvents(0)
-                    .rating(java.math.BigDecimal.ZERO)
-                    .build();
-            organizer = organizerRepository.save(organizer);
-            organizerId = organizer.getId();
-        }
-
         return AuthResponse.builder()
                 .token(token)
                 .tokenType("Bearer")
                 .userId(user.getId())
-                .organizerId(organizerId)
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .name(user.getName())
@@ -116,7 +89,8 @@ public class AuthService {
 
     public AuthResponse login(AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
 
         User user = userRepository.findByUsername(request.getUsername())
                 .or(() -> userRepository.findByEmail(request.getUsername()))
@@ -127,28 +101,10 @@ public class AuthService {
 
         String token = jwtTokenProvider.generateToken(authentication);
 
-        Long organizerId = null;
-        if (user.getRole() == Role.ORGANIZER) {
-            Organizer organizer = organizerRepository.findByUser_Id(user.getId())
-                    .orElseGet(() -> {
-                        Organizer newOrg = Organizer.builder()
-                                .user(user)
-                                .companyName(user.getName() + " Events")
-                                .verified(false)
-                                .active(true)
-                                .totalEvents(0)
-                                .rating(java.math.BigDecimal.ZERO)
-                                .build();
-                        return organizerRepository.save(newOrg);
-                    });
-            organizerId = organizer.getId();
-        }
-
         return AuthResponse.builder()
                 .token(token)
                 .tokenType("Bearer")
                 .userId(user.getId())
-                .organizerId(organizerId)
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .name(user.getName())
