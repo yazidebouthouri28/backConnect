@@ -3,7 +3,7 @@ package tn.esprit.projetintegre.repositorynadine;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import tn.esprit.projetintegre.entities.PromotionUsage;
+import tn.esprit.projetintegre.nadineentities.PromotionUsage;
 
 import java.util.List;
 

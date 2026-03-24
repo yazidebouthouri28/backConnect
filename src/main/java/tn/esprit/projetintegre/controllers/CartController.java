@@ -1,5 +1,5 @@
 // CartController.java
-package tn.esprit.projetintegre.controllernadine;
+package tn.esprit.projetintegre.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package tn.esprit.projetintegre.entities;
+package tn.esprit.projetintegre.nadineentities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -79,7 +79,7 @@ public class Promotion {
     // Usages (depuis PromotionUsage — table séparée liée)
     @OneToMany(mappedBy = "promotion", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<PromotionUsage> usages = new ArrayList<>();
+    private List< PromotionUsage> usages = new ArrayList<>();
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

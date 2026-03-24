@@ -4,13 +4,13 @@ package tn.esprit.projetintegre.servicenadine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import tn.esprit.projetintegre.nadineentities.Order;
 import tn.esprit.projetintegre.nadineentities.RefundRequest;
 import tn.esprit.projetintegre.nadineentities.User;
 import tn.esprit.projetintegre.enums.RefundRequestType;
 import tn.esprit.projetintegre.enums.RefundStatus;
 import tn.esprit.projetintegre.repositorynadine.RefundRequestRepository;
-import tn.esprit.projetintegre.services.OrderService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ public class RefundRequestService {
     @Transactional
     public RefundRequest submit(User user, Long orderId, BigDecimal amount,
                                 String reason, RefundRequestType type) {
-        Order order = orderService.getById(orderId);
+        Order order = orderService.getOrderById(orderId);
         return refundRequestRepository.save(RefundRequest.builder()
                 .user(user)
                 .order(order)

@@ -1,4 +1,4 @@
-package tn.esprit.projetintegre.services;
+package tn.esprit.projetintegre.servicenadine;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,8 +16,6 @@ import tn.esprit.projetintegre.nadineentities.Order;
 import tn.esprit.projetintegre.nadineentities.User;
 import tn.esprit.projetintegre.repositories.OrderRepository;
 import tn.esprit.projetintegre.repositories.ProductRepository;
-import tn.esprit.projetintegre.servicenadine.CartService;
-import tn.esprit.projetintegre.servicenadine.UserService;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

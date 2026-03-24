@@ -1,4 +1,4 @@
-package tn.esprit.projetintegre.controllernadine;
+package tn.esprit.projetintegre.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

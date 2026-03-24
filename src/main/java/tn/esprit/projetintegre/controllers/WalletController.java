@@ -1,5 +1,5 @@
 // WalletController.java
-package tn.esprit.projetintegre.controllernadine;
+package tn.esprit.projetintegre.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

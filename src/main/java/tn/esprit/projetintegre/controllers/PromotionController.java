@@ -1,9 +1,9 @@
-package tn.esprit.projetintegre.controllernadine;
+package tn.esprit.projetintegre.controllers;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.entities.Promotion;
+import tn.esprit.projetintegre.nadineentities.Promotion;
 import tn.esprit.projetintegre.servicenadine.PromotionService;
 
 import java.util.List;

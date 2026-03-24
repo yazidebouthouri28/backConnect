@@ -1,22 +1,15 @@
+// OrderController.java
 package tn.esprit.projetintegre.controllers;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.projetintegre.dto.ApiResponse;
-import tn.esprit.projetintegre.dto.PageResponse;
-import tn.esprit.projetintegre.dto.response.OrderResponse;
 import tn.esprit.projetintegre.nadineentities.Order;
 import tn.esprit.projetintegre.enums.OrderStatus;
 import tn.esprit.projetintegre.enums.PaymentStatus;
-import tn.esprit.projetintegre.mapper.DtoMapper;
-import tn.esprit.projetintegre.services.OrderService;
+import tn.esprit.projetintegre.servicenadine.OrderService;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,62 +17,40 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
-@Tag(name = "Orders", description = "Order management endpoints")
-@SecurityRequirement(name = "Bearer Authentication")
 public class OrderController {
 
     private final OrderService orderService;
-    private final DtoMapper dtoMapper;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    @Operation(summary = "Get all orders (Admin only)")
-    public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toOrderResponseList(orders)));
+    public ResponseEntity<List<Order>> getAllOrders() {
+        return ResponseEntity.ok(orderService.getAllOrders());
     }
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get orders by user")
-    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByUser(
-            @PathVariable Long userId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<Order> orders = orderService.getOrdersByUser(userId, PageRequest.of(page, size));
-        Page<OrderResponse> response = orders.map(dtoMapper::toOrderResponse);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+    public ResponseEntity<Page<Order>> getByUser(@PathVariable Long userId,
+                                                 Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId, pageable));
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    @Operation(summary = "Get orders by status (Admin only)")
-    public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getOrdersByStatus(
-            @PathVariable OrderStatus status,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        Page<Order> orders = orderService.getOrdersByStatus(status, PageRequest.of(page, size));
-        Page<OrderResponse> response = orders.map(dtoMapper::toOrderResponse);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+    public ResponseEntity<Page<Order>> getByStatus(@PathVariable OrderStatus status,
+                                                   Pageable pageable) {
+        return ResponseEntity.ok(orderService.getOrdersByStatus(status, pageable));
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get order by ID")
-    public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toOrderResponse(order)));
+    public ResponseEntity<Order> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getOrderById(id));
     }
 
     @GetMapping("/number/{orderNumber}")
-    @Operation(summary = "Get order by number")
-    public ResponseEntity<ApiResponse<OrderResponse>> getOrderByNumber(@PathVariable String orderNumber) {
-        Order order = orderService.getOrderByNumber(orderNumber);
-        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toOrderResponse(order)));
+    public ResponseEntity<Order> getByNumber(@PathVariable String orderNumber) {
+        return ResponseEntity.ok(orderService.getOrderByNumber(orderNumber));
     }
 
-    @PostMapping
-    @Operation(summary = "Create order from cart")
-    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
-            @RequestParam Long userId,
+    @PostMapping("/user/{userId}/checkout")
+    public ResponseEntity<Order> checkout(
+            @PathVariable Long userId,
             @RequestParam String shippingName,
             @RequestParam String shippingPhone,
             @RequestParam String shippingAddress,
@@ -88,36 +59,29 @@ public class OrderController {
             @RequestParam String shippingCountry,
             @RequestParam String paymentMethod,
             @RequestParam(required = false) String notes) {
-        Order order = orderService.createOrderFromCart(userId, shippingName, shippingPhone,
-                shippingAddress, shippingCity, shippingPostalCode, shippingCountry, paymentMethod, notes);
-        return ResponseEntity.ok(ApiResponse.success("Order created successfully", dtoMapper.toOrderResponse(order)));
+        return ResponseEntity.ok(orderService.createOrderFromCart(
+                userId, shippingName, shippingPhone,
+                shippingAddress, shippingCity,
+                shippingPostalCode, shippingCountry,
+                paymentMethod, notes));
     }
 
-    @PatchMapping("/{id}/status")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    @Operation(summary = "Update order status (Admin only)")
-    public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
-            @PathVariable Long id,
-            @RequestParam OrderStatus status) {
-        Order order = orderService.updateOrderStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.success("Order status updated", dtoMapper.toOrderResponse(order)));
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Order> updateStatus(@PathVariable Long id,
+                                              @RequestParam OrderStatus status) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
     }
 
-    @PatchMapping("/{id}/payment")
-    @Operation(summary = "Update payment status")
-    public ResponseEntity<ApiResponse<OrderResponse>> updatePaymentStatus(
-            @PathVariable Long id,
-            @RequestParam PaymentStatus status,
-            @RequestParam(required = false) String transactionId) {
-        Order order = orderService.updatePaymentStatus(id, status, transactionId);
-        return ResponseEntity.ok(ApiResponse.success("Payment status updated", dtoMapper.toOrderResponse(order)));
+    @PutMapping("/{id}/payment")
+    public ResponseEntity<Order> updatePayment(@PathVariable Long id,
+                                               @RequestParam PaymentStatus status,
+                                               @RequestParam String transactionId) {
+        return ResponseEntity.ok(orderService.updatePaymentStatus(
+                id, status, transactionId));
     }
 
     @GetMapping("/revenue")
-    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
-    @Operation(summary = "Get total revenue (Admin only)")
-    public ResponseEntity<ApiResponse<BigDecimal>> getTotalRevenue() {
-        BigDecimal revenue = orderService.getTotalRevenue();
-        return ResponseEntity.ok(ApiResponse.success(revenue));
+    public ResponseEntity<BigDecimal> getTotalRevenue() {
+        return ResponseEntity.ok(orderService.getTotalRevenue());
     }
 }

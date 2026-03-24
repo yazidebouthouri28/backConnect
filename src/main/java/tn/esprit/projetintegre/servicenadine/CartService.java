@@ -78,4 +78,9 @@ public class CartService {
         cart.setAppliedCouponCode(null);
         cartRepository.save(cart);
     }
+
+    public Cart getCartByUserId(Long userId) {
+        return cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Panier introuvable"));
+    }
 }

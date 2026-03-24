@@ -4,8 +4,8 @@ package tn.esprit.projetintegre.servicenadine;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tn.esprit.projetintegre.entities.Promotion;
-import tn.esprit.projetintegre.entities.PromotionUsage;
+import tn.esprit.projetintegre.nadineentities.Promotion;
+import tn.esprit.projetintegre.nadineentities.PromotionUsage;
 import tn.esprit.projetintegre.nadineentities.Order;
 
 import tn.esprit.projetintegre.nadineentities.User;

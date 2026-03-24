@@ -1,9 +1,10 @@
-package tn.esprit.projetintegre.entities;
+package tn.esprit.projetintegre.nadineentities;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import tn.esprit.projetintegre.nadineentities.Order;
+import tn.esprit.projetintegre.nadineentities.Promotion;
 import tn.esprit.projetintegre.nadineentities.User;
 
 import java.math.BigDecimal;
@@ -47,7 +48,7 @@ public class PromotionUsage {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "promotion_id", nullable = false)
-    private tn.esprit.projetintegre.entities.Promotion promotion;
+    private Promotion promotion;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
