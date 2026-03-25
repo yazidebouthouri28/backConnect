@@ -1,12 +1,9 @@
 package tn.esprit.projetintegre.entities;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
-import tn.esprit.projetintegre.enums.SponsorTier;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,7 +16,6 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@JsonIgnoreProperties({"sponsorships"})
 public class Sponsor {
 
     @Id
@@ -50,11 +46,8 @@ public class Sponsor {
     private String notes;
     
     private Boolean isActive = true;
-    @Enumerated(EnumType.STRING)
-    private SponsorTier tier;
     
     @OneToMany(mappedBy = "sponsor", cascade = CascadeType.ALL)
-    @JsonIgnore  // <-- add this
     private List<Sponsorship> sponsorships = new ArrayList<>();
 
     private LocalDateTime createdAt;

@@ -14,10 +14,8 @@ import tn.esprit.projetintegre.dto.request.SponsorRequest;
 import tn.esprit.projetintegre.dto.request.SponsorshipRequest;
 import tn.esprit.projetintegre.dto.response.SponsorResponse;
 import tn.esprit.projetintegre.dto.response.SponsorshipResponse;
-import tn.esprit.projetintegre.dto.response.UserSponsorRequestResponse;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
-import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.mapper.DtoMapper;
 import tn.esprit.projetintegre.services.SponsorService;
 
@@ -35,7 +33,7 @@ public class SponsorController {
     @GetMapping
     @Operation(summary = "Get all sponsors")
     public ResponseEntity<ApiResponse<List<SponsorResponse>>> getAllSponsors() {
-        List<Sponsor> sponsors = sponsorService.getActiveSponsors();
+        List<Sponsor> sponsors = sponsorService.getAllSponsors();
         return ResponseEntity.ok(ApiResponse.success(dtoMapper.toSponsorResponseList(sponsors)));
     }
 
@@ -92,40 +90,6 @@ public class SponsorController {
     public ResponseEntity<ApiResponse<Void>> deleteSponsor(@PathVariable Long id) {
         sponsorService.deleteSponsor(id);
         return ResponseEntity.ok(ApiResponse.success("Sponsor deleted successfully", null));
-    }
-    @GetMapping("/all")
-    @Operation(summary = "Get all sponsors including inactive")
-    public ResponseEntity<ApiResponse<List<SponsorResponse>>> getAllSponsorsIncludingInactive() {
-        List<Sponsor> sponsors = sponsorService.getAllSponsors();
-        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toSponsorResponseList(sponsors)));
-    }
-    @GetMapping("/requests")
-    @Operation(summary = "Get pending sponsor requests")
-    public ResponseEntity<ApiResponse<List<UserSponsorRequestResponse>>> getPendingRequests() {
-        List<User> pending = sponsorService.getPendingSponsorRequests();
-        return ResponseEntity.ok(ApiResponse.success(pending.stream().map(u -> UserSponsorRequestResponse.builder()
-                .id(u.getId())
-                .name(u.getName())
-                .email(u.getEmail())
-                .phone(u.getPhone())
-                .username(u.getUsername())
-                .sponsorStatus(u.getSponsorStatus())
-                .createdAt(u.getCreatedAt())
-                .build()).toList()));
-    }
-
-    @PutMapping("/requests/{userId}/approve")
-    @Operation(summary = "Approve sponsor request")
-    public ResponseEntity<ApiResponse<Void>> approveRequest(@PathVariable Long userId) {
-        sponsorService.approveSponsorRequest(userId);
-        return ResponseEntity.ok(ApiResponse.success("Sponsor approved", null));
-    }
-
-    @PutMapping("/requests/{userId}/reject")
-    @Operation(summary = "Reject sponsor request")
-    public ResponseEntity<ApiResponse<Void>> rejectRequest(@PathVariable Long userId) {
-        sponsorService.rejectSponsorRequest(userId);
-        return ResponseEntity.ok(ApiResponse.success("Sponsor rejected", null));
     }
 
     // Sponsorship endpoints
@@ -209,6 +173,22 @@ public class SponsorController {
         return ResponseEntity.ok(ApiResponse.success("Sponsorship deleted successfully", null));
     }
 
+    private Sponsorship toSponsorshipEntity(SponsorshipRequest request) {
+        return Sponsorship.builder()
+                .amount(request.getAmount())
+                .sponsorshipType(request.getSponsorshipType())   // ← AJOUTÉ
+                .sponsorshipLevel(request.getSponsorshipLevel())
+                .description(request.getDescription())
+                .currency(request.getCurrency())                 // ← AJOUTÉ
+                .benefits(request.getBenefits())
+                .deliverables(request.getDeliverables())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .notes(request.getNotes())
+                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .status(request.getStatus() != null ? request.getStatus() : "PENDING")  // ← AJOUTÉ
+                .build();
+    }
     private Sponsor toSponsorEntity(SponsorRequest request) {
         return Sponsor.builder()
                 .name(request.getName())
@@ -217,20 +197,13 @@ public class SponsorController {
                 .website(request.getWebsite())
                 .email(request.getEmail())
                 .phone(request.getPhone())
-                // Remplacer tier par sponsorshipLevel ou supprimer si non présent dans Sponsor
+                .address(request.getAddress())           // ← utiliser les vrais champs
+                .city(request.getCity())                 // ← (ils existent dans SponsorRequest)
+                .country(request.getCountry())           // ←
                 .contactPerson(request.getContactPerson())
-                // Remplacer isActive par getIsActive() si présent dans SponsorRequest
-                .tier(request.getTier())
-                .build();
-    }
-    private Sponsorship toSponsorshipEntity(SponsorshipRequest request) {
-        return Sponsorship.builder()
-                .amount(request.getAmount())
-                .sponsorshipLevel(request.getSponsorshipLevel()) // Changé de tier à sponsorshipLevel
-                .benefits(request.getBenefits())
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
-                .isActive(request.getIsActive())
+                .contactPosition(request.getContactPosition()) // ←
+                .notes(request.getNotes())               // ←
+                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
     }
 

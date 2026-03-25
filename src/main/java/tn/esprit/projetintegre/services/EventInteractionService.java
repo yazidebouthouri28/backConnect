@@ -100,9 +100,6 @@ public class EventInteractionService {
 
         log.info("INTERACTION COUNTERS: event={}, likes={}, dislikes={}", event.getId(), likes, dislikes);
 
-        event.setLikesCount((int) likes);
-        event.setDislikesCount((int) dislikes);
-
         // Custom rating logic:
         // - Only likes (X=0, Y>0) -> 5 stars
         // - Only dislikes (Y=0, X>0) -> 0 stars

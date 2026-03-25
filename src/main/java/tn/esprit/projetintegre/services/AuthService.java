@@ -14,7 +14,6 @@ import tn.esprit.projetintegre.entities.Cart;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.entities.Wallet;
 import tn.esprit.projetintegre.enums.Role;
-import tn.esprit.projetintegre.enums.SponsorStatus;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.repositories.CartRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
@@ -50,13 +49,11 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .address(request.getAddress())
-                .country(request.getCountry())
-                .role(request.getRole() != null ? request.getRole() : Role.USER)
-                .sponsorStatus(request.getRole() == Role.SPONSOR ? SponsorStatus.PENDING : null) // ← add this
+                .role(Role.USER)
                 .isActive(true)
                 .isSuspended(false)
-                .isBuyer(request.getIsBuyer() != null ? request.getIsBuyer() : true)
-                .isSeller(request.getRole() == Role.SELLER)
+                .isBuyer(true)
+                .isSeller(false)
                 .isAdmin(false)
                 .loyaltyPoints(0)
                 .loyaltyTier("BRONZE")

@@ -52,6 +52,7 @@ public class EventController {
     @GetMapping("/{id}")
     @Operation(summary = "Get event by ID")
     public ResponseEntity<ApiResponse<EventResponse>> getEventById(@PathVariable Long id) {
+        eventService.incrementViewCount(id);
         Event event = eventService.getEventById(id);
         return ResponseEntity.ok(ApiResponse.success(dtoMapper.toEventResponse(event)));
     }
@@ -113,26 +114,29 @@ public class EventController {
             @PathVariable Long id,
             @Valid @RequestBody EventRequest request) {
         Event updated = eventService.updateEvent(id, mapToEvent(request));
-        return ResponseEntity
-                .ok(ApiResponse.success("Événement mis à jour avec succès", dtoMapper.toEventResponse(updated)));
+        return ResponseEntity.ok(ApiResponse.success("Événement mis à jour avec succès", dtoMapper.toEventResponse(updated)));
     }
-
+    
     private Event mapToEvent(EventRequest request) {
         return Event.builder()
-                .name(request.getName())
-                .picture(request.getPicture())
+                .title(request.getTitle())
                 .description(request.getDescription())
                 .eventType(request.getEventType())
                 .category(request.getCategory())
+                .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .location(request.getLocation())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .maxParticipants(request.getMaxParticipants())
+                .price(request.getPrice())
                 .isFree(request.getIsFree())
+                .isPublic(request.getIsPublic())
+                .requiresApproval(request.getRequiresApproval())
                 .images(request.getImages())
                 .thumbnail(request.getThumbnail())
                 .status(request.getStatus())
                 .registrationDeadline(request.getRegistrationDeadline())
-                .maxParticipants(request.getMaxParticipants())
-                .price(request.getPrice())
                 .build();
     }
 
@@ -151,8 +155,7 @@ public class EventController {
     @Operation(summary = "Publish an event")
     public ResponseEntity<ApiResponse<EventResponse>> publishEvent(@PathVariable Long id) {
         Event published = eventService.publishEvent(id);
-        return ResponseEntity
-                .ok(ApiResponse.success("Event published successfully", dtoMapper.toEventResponse(published)));
+        return ResponseEntity.ok(ApiResponse.success("Event published successfully", dtoMapper.toEventResponse(published)));
     }
 
     @DeleteMapping("/{id}")
@@ -160,6 +163,6 @@ public class EventController {
     @Operation(summary = "Delete/Cancel an event")
     public ResponseEntity<ApiResponse<Void>> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
-        return ResponseEntity.ok(ApiResponse.success("Événement supprimé avec succès", null));
+        return ResponseEntity.ok(ApiResponse.success("Event cancelled", null));
     }
 }

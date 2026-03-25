@@ -68,10 +68,7 @@ public class EventService {
         Organizer organizer = organizerRepository.findById(organizerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Organizer not found"));
         event.setOrganizer(organizer);
-
-        if (event.getStatus() == null) {
-            event.setStatus(EventStatus.DRAFT);
-        }
+        event.setStatus(EventStatus.DRAFT);
 
         return eventRepository.save(event);
     }
@@ -80,30 +77,17 @@ public class EventService {
     public Event updateEvent(Long id, Event eventDetails) {
         Event event = getEventById(id);
 
-        if (eventDetails.getName() != null)
-            event.setName(eventDetails.getName());
-        if (eventDetails.getDescription() != null)
-            event.setDescription(eventDetails.getDescription());
-        if (eventDetails.getEventType() != null)
-            event.setEventType(eventDetails.getEventType());
-        if (eventDetails.getCategory() != null)
-            event.setCategory(eventDetails.getCategory());
-        if (eventDetails.getPicture() != null)
-            event.setPicture(eventDetails.getPicture());
-        if (eventDetails.getEndDate() != null)
-            event.setEndDate(eventDetails.getEndDate());
-        if (eventDetails.getMaxParticipants() != null)
-            event.setMaxParticipants(eventDetails.getMaxParticipants());
-        if (eventDetails.getPrice() != null)
-            event.setPrice(eventDetails.getPrice());
-        if (eventDetails.getIsFree() != null)
-            event.setIsFree(eventDetails.getIsFree());
-        if (eventDetails.getImages() != null)
-            event.setImages(eventDetails.getImages());
-        if (eventDetails.getLocation() != null)
-            event.setLocation(eventDetails.getLocation());
-        if (eventDetails.getStatus() != null)
-            event.setStatus(eventDetails.getStatus());
+        if (eventDetails.getTitle() != null) event.setTitle(eventDetails.getTitle());
+        if (eventDetails.getDescription() != null) event.setDescription(eventDetails.getDescription());
+        if (eventDetails.getEventType() != null) event.setEventType(eventDetails.getEventType());
+        if (eventDetails.getCategory() != null) event.setCategory(eventDetails.getCategory());
+        if (eventDetails.getStartDate() != null) event.setStartDate(eventDetails.getStartDate());
+        if (eventDetails.getEndDate() != null) event.setEndDate(eventDetails.getEndDate());
+        if (eventDetails.getMaxParticipants() != null) event.setMaxParticipants(eventDetails.getMaxParticipants());
+        if (eventDetails.getPrice() != null) event.setPrice(eventDetails.getPrice());
+        if (eventDetails.getIsFree() != null) event.setIsFree(eventDetails.getIsFree());
+        if (eventDetails.getImages() != null) event.setImages(eventDetails.getImages());
+        if (eventDetails.getLocation() != null) event.setLocation(eventDetails.getLocation());
 
         return eventRepository.save(event);
     }
@@ -118,16 +102,24 @@ public class EventService {
     @Transactional
     public Event publishEvent(Long id) {
         Event event = getEventById(id);
-        if (event.getEndDate() == null) {
-            throw new IllegalStateException("Event end date must be set before publishing");
+        if (event.getStartDate() == null || event.getEndDate() == null) {
+            throw new IllegalStateException("Event dates must be set before publishing");
         }
         event.setStatus(EventStatus.PUBLISHED);
         return eventRepository.save(event);
     }
 
     @Transactional
+    public void incrementViewCount(Long id) {
+        Event event = getEventById(id);
+        event.setViewCount(event.getViewCount() + 1);
+        eventRepository.save(event);
+    }
+
+    @Transactional
     public void deleteEvent(Long id) {
         Event event = getEventById(id);
-        eventRepository.delete(event);
+        event.setStatus(EventStatus.CANCELLED);
+        eventRepository.save(event);
     }
 }
