@@ -27,6 +27,7 @@ public class SiteSummaryResponse {
     private String image;
     private List<String> amenities;
     private Boolean isActive;
+    private Boolean verified;
     private BigDecimal rating;
     private Integer reviewCount;
     private String checkInTime;

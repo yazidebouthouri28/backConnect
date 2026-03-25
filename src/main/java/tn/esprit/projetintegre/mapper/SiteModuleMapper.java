@@ -61,6 +61,7 @@ public class SiteModuleMapper {
                 .contactPhone(entity.getContactPhone())
                 .contactEmail(entity.getContactEmail())
                 .isActive(entity.getIsActive())
+                .verified(entity.getVerified())
                 .rating(entity.getAverageRating()) // averageRating directly mapped to rating
                 .reviewCount(entity.getReviewCount())
                 // No owner mapping here as owner might be User entity not exposed like this yet
@@ -96,6 +97,7 @@ public class SiteModuleMapper {
                 .image(entity.getThumbnail())
                 .amenities(entity.getAmenities())
                 .isActive(entity.getIsActive())
+                .verified(entity.getVerified())
                 .rating(entity.getAverageRating())
                 .reviewCount(entity.getReviewCount())
                 .checkInTime(entity.getCheckInTime())

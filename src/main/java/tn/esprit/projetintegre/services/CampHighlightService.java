@@ -23,6 +23,10 @@ public class CampHighlightService {
     private final SiteModuleMapper siteMapper;
     private final SiteImageStorageService siteImageStorageService;
 
+    public List<CampHighlightResponse> getAllHighlights() {
+        return siteMapper.toCampHighlightResponseList(campHighlightRepository.findAll());
+    }
+
     public List<CampHighlightResponse> getHighlightsBySite(Long siteId) {
         return siteMapper.toCampHighlightResponseList(campHighlightRepository.findBySite_Id(siteId));
     }

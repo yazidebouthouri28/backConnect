@@ -10,4 +10,6 @@ public interface CertificationRepository extends JpaRepository<Certification, Lo
     List<Certification> findBySite_Id(Long siteId);
 
     List<Certification> findByStatus(CertificationStatus status);
+
+    boolean existsBySite_IdAndStatus(Long siteId, CertificationStatus status);
 }

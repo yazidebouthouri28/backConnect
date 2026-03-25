@@ -75,6 +75,10 @@ public class Site {
     @Builder.Default
     private Boolean isActive = true;
 
+    /** Platform verification badge (e.g. after certification approved). */
+    @Builder.Default
+    private Boolean verified = false;
+
     @Column(precision = 10, scale = 2)
     @DecimalMin(value = "0.0", message = "Price must be positive")
     private BigDecimal pricePerNight;

@@ -393,6 +393,7 @@ public class DtoMapper {
                 .contactPhone(entity.getContactPhone())
                 .contactEmail(entity.getContactEmail())
                 .isActive(entity.getIsActive())
+                .verified(entity.getVerified())
                 .rating(entity.getAverageRating())
                 .reviewCount(entity.getReviewCount())
                 .ownerId(null)

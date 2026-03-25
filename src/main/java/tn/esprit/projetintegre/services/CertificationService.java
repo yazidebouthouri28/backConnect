@@ -51,7 +51,19 @@ public class CertificationService {
         Certification cert = certificationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Certification not found"));
         cert.setStatus(status);
-        return siteMapper.toResponse(certificationRepository.save(cert));
+        Certification saved = certificationRepository.save(cert);
+        syncSiteVerifiedFlag(saved.getSite());
+        return siteMapper.toResponse(saved);
+    }
+
+    private void syncSiteVerifiedFlag(Site site) {
+        if (site == null || site.getId() == null) {
+            return;
+        }
+        boolean hasApprovedCert = certificationRepository.existsBySite_IdAndStatus(site.getId(),
+                CertificationStatus.CERTIFIED);
+        site.setVerified(hasApprovedCert);
+        siteRepository.save(site);
     }
 
     public CertificationResponse updateCertification(Long id, CertificationRequest request) {
@@ -62,6 +74,11 @@ public class CertificationService {
     }
 
     public void deleteCertification(Long id) {
+        Certification cert = certificationRepository.findById(id).orElse(null);
+        Site site = cert != null ? cert.getSite() : null;
         certificationRepository.deleteById(id);
+        if (site != null) {
+            syncSiteVerifiedFlag(site);
+        }
     }
 }

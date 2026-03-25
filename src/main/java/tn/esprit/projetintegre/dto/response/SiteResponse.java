@@ -27,6 +27,7 @@ public class SiteResponse {
     private String contactPhone;
     private String contactEmail;
     private Boolean isActive;
+    private Boolean verified;
     private BigDecimal rating;
     private Integer reviewCount;
     private Long ownerId;

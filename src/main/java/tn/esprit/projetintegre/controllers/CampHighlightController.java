@@ -22,6 +22,11 @@ public class CampHighlightController {
 
     private final CampHighlightService campHighlightService;
 
+    @GetMapping("/all")
+    public List<CampHighlightResponse> getAllHighlights() {
+        return campHighlightService.getAllHighlights();
+    }
+
     @GetMapping("/site/{siteId}")
     public List<CampHighlightResponse> getHighlightsBySite(@PathVariable Long siteId) {
         return campHighlightService.getHighlightsBySite(siteId);
