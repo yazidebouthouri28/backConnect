@@ -137,6 +137,7 @@ public class UserService {
                 .sellerRating(user.getSellerRating())
                 .avatar(user.getAvatar())
                 .bio(user.getBio())
+                .location(user.getLocation())
                 .isActive(user.getIsActive())
                 .loyaltyPoints(user.getLoyaltyPoints())
                 .loyaltyTier(user.getLoyaltyTier())

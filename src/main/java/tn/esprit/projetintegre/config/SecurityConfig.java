@@ -59,7 +59,8 @@ public class SecurityConfig {
                                 "/api/reviews/site/**", 
                                 "/api/camp-highlights/site/**", 
                                 "/api/virtual-tours/site/**", 
-                                "/api/certifications/site/**"
+                                "/api/certifications/site/**",
+                                "/api/sponsors/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

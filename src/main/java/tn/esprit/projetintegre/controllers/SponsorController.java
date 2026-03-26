@@ -16,6 +16,7 @@ import tn.esprit.projetintegre.dto.response.SponsorResponse;
 import tn.esprit.projetintegre.dto.response.SponsorshipResponse;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
+import tn.esprit.projetintegre.enums.SponsorTier;
 import tn.esprit.projetintegre.mapper.DtoMapper;
 import tn.esprit.projetintegre.services.SponsorService;
 
@@ -92,7 +93,6 @@ public class SponsorController {
         return ResponseEntity.ok(ApiResponse.success("Sponsor deleted successfully", null));
     }
 
-    // Sponsorship endpoints
     @GetMapping("/sponsorships")
     @Operation(summary = "Get all sponsorships")
     public ResponseEntity<ApiResponse<List<SponsorshipResponse>>> getAllSponsorships() {
@@ -176,19 +176,20 @@ public class SponsorController {
     private Sponsorship toSponsorshipEntity(SponsorshipRequest request) {
         return Sponsorship.builder()
                 .amount(request.getAmount())
-                .sponsorshipType(request.getSponsorshipType())   // ← AJOUTÉ
+                .sponsorshipType(request.getSponsorshipType())
                 .sponsorshipLevel(request.getSponsorshipLevel())
                 .description(request.getDescription())
-                .currency(request.getCurrency())                 // ← AJOUTÉ
+                .currency(request.getCurrency())
                 .benefits(request.getBenefits())
                 .deliverables(request.getDeliverables())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .notes(request.getNotes())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
-                .status(request.getStatus() != null ? request.getStatus() : "PENDING")  // ← AJOUTÉ
+                .status(request.getStatus() != null ? request.getStatus() : "PENDING")
                 .build();
     }
+
     private Sponsor toSponsorEntity(SponsorRequest request) {
         return Sponsor.builder()
                 .name(request.getName())
@@ -197,16 +198,14 @@ public class SponsorController {
                 .website(request.getWebsite())
                 .email(request.getEmail())
                 .phone(request.getPhone())
-                .address(request.getAddress())           // ← utiliser les vrais champs
-                .city(request.getCity())                 // ← (ils existent dans SponsorRequest)
-                .country(request.getCountry())           // ←
+                .address(request.getAddress())
+                .city(request.getCity())
+                .country(request.getCountry())
                 .contactPerson(request.getContactPerson())
-                .contactPosition(request.getContactPosition()) // ←
-                .notes(request.getNotes())               // ←
+                .contactPosition(request.getContactPosition())
+                .notes(request.getNotes())
+                .tier(request.getTier() != null ? request.getTier() : SponsorTier.BRONZE)
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
     }
-
-
 }
-

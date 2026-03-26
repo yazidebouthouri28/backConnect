@@ -1,8 +1,10 @@
 package tn.esprit.projetintegre.mapper;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 import tn.esprit.projetintegre.dto.response.*;
 import tn.esprit.projetintegre.entities.*;
+import tn.esprit.projetintegre.enums.SponsorTier;
 
 import java.util.Collections;
 import java.util.List;
@@ -617,12 +619,20 @@ public class DtoMapper {
                 .website(entity.getWebsite())
                 .email(entity.getEmail())
                 .phone(entity.getPhone())
+                .address(entity.getAddress())
+                .city(entity.getCity())
+                .country(entity.getCountry())
                 .contactPerson(entity.getContactPerson())
+                .contactPosition(entity.getContactPosition())
+                .notes(entity.getNotes())
+                .tier(entity.getTier() != null ? entity.getTier() : SponsorTier.BRONZE)
                 .isActive(entity.getIsActive())
                 // Note: address, city, country, contactPosition, notes ne sont pas dans
                 // l'entité Sponsor fournie
                 // sponsorshipCount peut être calculé si la relation existe :
-                .sponsorshipCount(entity.getSponsorships() != null ? entity.getSponsorships().size() : 0)
+                .sponsorshipCount(entity.getSponsorships() != null && Hibernate.isInitialized(entity.getSponsorships())
+                        ? entity.getSponsorships().size()
+                        : 0)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -690,8 +700,8 @@ public class DtoMapper {
                 .userName(entity.getUser() != null ? entity.getUser().getName() : null)
                 .achievementId(entity.getAchievement() != null ? entity.getAchievement().getId() : null)
                 .achievementName(entity.getAchievement() != null ? entity.getAchievement().getName() : null)
-                // Ajout des champs manquants du DTO
                 .achievementBadge(entity.getAchievement() != null ? entity.getAchievement().getBadge() : null)
+                .achievementIcon(entity.getAchievement() != null ? entity.getAchievement().getIcon() : null)
                 .achievementDescription(
                         entity.getAchievement() != null ? entity.getAchievement().getDescription() : null)
                 .rewardPoints(entity.getAchievement() != null ? entity.getAchievement().getRewardPoints() : null)

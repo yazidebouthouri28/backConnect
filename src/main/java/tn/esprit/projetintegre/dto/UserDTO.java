@@ -29,6 +29,7 @@ public class UserDTO {
     private BigDecimal sellerRating;
     private String avatar;
     private String bio;
+    private String location;
     private Boolean isActive;
     private Integer loyaltyPoints;
     private String loyaltyTier;

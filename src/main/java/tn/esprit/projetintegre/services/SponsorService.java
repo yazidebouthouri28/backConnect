@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Event;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
+import tn.esprit.projetintegre.enums.SponsorTier;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.EventRepository;
@@ -70,6 +71,8 @@ public class SponsorService {
         sponsor.setContactPerson(sponsorDetails.getContactPerson());
         sponsor.setContactPosition(sponsorDetails.getContactPosition());
         sponsor.setNotes(sponsorDetails.getNotes());
+        sponsor.setTier(sponsorDetails.getTier() != null ? sponsorDetails.getTier() : SponsorTier.BRONZE);
+        sponsor.setIsActive(sponsorDetails.getIsActive() != null ? sponsorDetails.getIsActive() : sponsor.getIsActive());
         return sponsorRepository.save(sponsor);
     }
 

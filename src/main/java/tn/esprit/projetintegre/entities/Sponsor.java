@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import tn.esprit.projetintegre.enums.SponsorTier;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public class Sponsor {
     
     @Column(length = 500)
     private String notes;
+
+    @Enumerated(EnumType.STRING)
+    private SponsorTier tier = SponsorTier.BRONZE;
     
     private Boolean isActive = true;
     
