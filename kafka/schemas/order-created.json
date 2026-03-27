@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OrderCreatedEvent",
+  "description": "Published when a new order is placed",
+  "topic": "order.created",
+  "type": "object",
+  "required": ["eventType", "orderId", "orderNumber", "userId", "totalAmount", "items", "timestamp"],
+  "properties": {
+    "eventType": { "type": "string", "const": "CREATED" },
+    "orderId": { "type": "integer" },
+    "orderNumber": { "type": "string", "pattern": "^ORD-[0-9]{8}-[0-9]+$" },
+    "userId": { "type": "integer" },
+    "userEmail": { "type": "string", "format": "email" },
+    "totalAmount": { "type": "number" },
+    "status": { "type": "string", "enum": ["PENDING", "CONFIRMED"] },
+    "paymentStatus": { "type": "string", "enum": ["UNPAID", "PAID"] },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "integer" },
+          "productName": { "type": "string" },
+          "quantity": { "type": "integer", "minimum": 1 },
+          "unitPrice": { "type": "number" }
+        }
+      }
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "example": {
+    "eventType": "CREATED",
+    "orderId": 456,
+    "orderNumber": "ORD-20260320-001",
+    "userId": 42,
+    "userEmail": "user@example.com",
+    "totalAmount": 129.97,
+    "status": "PENDING",
+    "paymentStatus": "UNPAID",
+    "items": [
+      { "productId": 123, "productName": "Wireless Headphones", "quantity": 2, "unitPrice": 49.99 },
+      { "productId": 456, "productName": "USB Cable", "quantity": 1, "unitPrice": 29.99 }
+    ],
+    "timestamp": "2026-03-20T16:00:00"
+  }
+}

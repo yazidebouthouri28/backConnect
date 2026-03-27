@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OrderCompletedEvent",
+  "description": "Published when an order is delivered/completed",
+  "topic": "order.completed",
+  "type": "object",
+  "required": ["eventType", "orderId", "userId", "timestamp"],
+  "properties": {
+    "eventType": { "type": "string", "const": "COMPLETED" },
+    "orderId": { "type": "integer" },
+    "orderNumber": { "type": "string" },
+    "userId": { "type": "integer" },
+    "userEmail": { "type": "string" },
+    "totalAmount": { "type": "number" },
+    "status": { "type": "string", "const": "DELIVERED" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}
