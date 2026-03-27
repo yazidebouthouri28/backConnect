@@ -78,6 +78,7 @@ tn\esprit\projetintegre\dto\request\TicketRequest$TicketRequestBuilder.class
 tn\esprit\projetintegre\controllers\TransactionController.class
 tn\esprit\projetintegre\entities\Review.class
 tn\esprit\projetintegre\controllers\ProductController.class
+tn\esprit\projetintegre\services\CampsiteService.class
 tn\esprit\projetintegre\enums\TicketRequestStatus.class
 tn\esprit\projetintegre\enums\Role.class
 tn\esprit\projetintegre\repositories\ShippingAddressRepository.class
@@ -163,6 +164,7 @@ tn\esprit\projetintegre\repositories\ServiceApplicationRepository.class
 tn\esprit\projetintegre\services\ReviewService.class
 tn\esprit\projetintegre\dto\UserDTO$UserDTOBuilder.class
 tn\esprit\projetintegre\entities\InterventionSecours$InterventionSecoursBuilder.class
+tn\esprit\projetintegre\dto\ForgotPasswordRequest$ForgotPasswordRequestBuilder.class
 tn\esprit\projetintegre\entities\Product.class
 tn\esprit\projetintegre\entities\Inventory.class
 tn\esprit\projetintegre\services\NotificationService.class
@@ -175,6 +177,7 @@ tn\esprit\projetintegre\controllers\RentalController.class
 tn\esprit\projetintegre\entities\ServiceApplication$ServiceApplicationBuilder.class
 tn\esprit\projetintegre\config\WebSocketConfig.class
 tn\esprit\projetintegre\config\CorsConfig.class
+tn\esprit\projetintegre\controllers\CampsiteController.class
 tn\esprit\projetintegre\repositories\ReviewRepository.class
 tn\esprit\projetintegre\dto\response\TimeSlotResponse.class
 tn\esprit\projetintegre\services\RefundService.class
@@ -210,6 +213,7 @@ tn\esprit\projetintegre\entities\UtilisationPromotion.class
 tn\esprit\projetintegre\entities\OrderItem.class
 tn\esprit\projetintegre\dto\ChatRoomDTO$CreateRequest$CreateRequestBuilder.class
 tn\esprit\projetintegre\enums\StatutAlerte.class
+tn\esprit\projetintegre\dto\request\CampsiteCreateRequest.class
 tn\esprit\projetintegre\dto\request\MissionRequest.class
 tn\esprit\projetintegre\entities\Subscription.class
 tn\esprit\projetintegre\dto\request\OrganizerRequest$OrganizerRequestBuilder.class
@@ -304,6 +308,7 @@ tn\esprit\projetintegre\entities\CandidatureService.class
 tn\esprit\projetintegre\dto\ChatMessageDTO$UpdateRequest.class
 tn\esprit\projetintegre\dto\ChatRoomDTO$MemberAction$MemberActionBuilder.class
 tn\esprit\projetintegre\repositories\NotificationRepository.class
+tn\esprit\projetintegre\dto\ResetPasswordRequest$ResetPasswordRequestBuilder.class
 tn\esprit\projetintegre\entities\Wallet.class
 tn\esprit\projetintegre\mapper\SiteModuleMapper.class
 tn\esprit\projetintegre\entities\ProductVariant$ProductVariantBuilder.class
@@ -330,11 +335,14 @@ tn\esprit\projetintegre\entities\Product$ProductBuilder.class
 tn\esprit\projetintegre\entities\ServiceDetail$ServiceDetailBuilder.class
 tn\esprit\projetintegre\dto\response\EventResponse$EventResponseBuilder.class
 tn\esprit\projetintegre\enums\SponsorStatus.class
+tn\esprit\projetintegre\dto\response\CampsiteResponse.class
+tn\esprit\projetintegre\services\CouponService$1.class
 tn\esprit\projetintegre\dto\request\RefundRequest.class
 tn\esprit\projetintegre\controllers\TicketController.class
 tn\esprit\projetintegre\dto\response\EmergencyAlertResponse.class
 tn\esprit\projetintegre\entities\ServiceApplication.class
 tn\esprit\projetintegre\controllers\AchievementController.class
+tn\esprit\projetintegre\controllers\AdminSponsorRequestController.class
 tn\esprit\projetintegre\dto\ChatMessageDTO$Response.class
 tn\esprit\projetintegre\entities\CertificationItem.class
 tn\esprit\projetintegre\dto\request\WalletRequest.class
@@ -431,6 +439,7 @@ tn\esprit\projetintegre\dto\ChatRoomDTO$CreateRequest.class
 tn\esprit\projetintegre\dto\request\TransactionRequest$TransactionRequestBuilder.class
 tn\esprit\projetintegre\repositories\CertificationItemRepository.class
 tn\esprit\projetintegre\dto\ChatRoomDTO.class
+tn\esprit\projetintegre\dto\request\CampsiteCreateRequest$CampsiteCreateRequestBuilder.class
 tn\esprit\projetintegre\enums\TypeUrgence.class
 tn\esprit\projetintegre\repositories\OrganizerRepository.class
 tn\esprit\projetintegre\dto\request\ParticipantRequest.class
@@ -461,6 +470,7 @@ tn\esprit\projetintegre\entities\User$UserBuilder.class
 tn\esprit\projetintegre\entities\Subscription$SubscriptionBuilder.class
 tn\esprit\projetintegre\entities\EmergencyProtocol.class
 tn\esprit\projetintegre\controllers\ForumController.class
+tn\esprit\projetintegre\dto\response\CampsiteResponse$CampsiteResponseBuilder.class
 tn\esprit\projetintegre\entities\Wishlist$WishlistBuilder.class
 tn\esprit\projetintegre\config\DataInitializer.class
 tn\esprit\projetintegre\exception\GlobalExceptionHandler.class
@@ -476,6 +486,7 @@ tn\esprit\projetintegre\dto\response\CategoryResponse.class
 tn\esprit\projetintegre\entities\EventInteraction$EventInteractionBuilder.class
 tn\esprit\projetintegre\repositories\UserRepository.class
 tn\esprit\projetintegre\services\OrderService$1.class
+tn\esprit\projetintegre\controllers\SponsorRequestController.class
 tn\esprit\projetintegre\dto\request\SponsorshipRequest$SponsorshipRequestBuilder.class
 tn\esprit\projetintegre\controllers\EventController.class
 tn\esprit\projetintegre\repositories\RentalRepository.class
@@ -485,6 +496,7 @@ tn\esprit\projetintegre\services\SubscriptionService.class
 tn\esprit\projetintegre\controllers\GeneralReviewController$RatingStats.class
 tn\esprit\projetintegre\dto\ChatMessageDTO$CreateRequest.class
 tn\esprit\projetintegre\entities\LoyaltyProgram$LoyaltyProgramBuilder.class
+tn\esprit\projetintegre\dto\ForgotPasswordRequest.class
 tn\esprit\projetintegre\enums\TypeExercice.class
 tn\esprit\projetintegre\dto\PackDTO.class
 tn\esprit\projetintegre\dto\request\RouteGuideRequest.class
@@ -493,6 +505,7 @@ tn\esprit\projetintegre\exception\DuplicateResourceException.class
 tn\esprit\projetintegre\controllers\WarehouseController.class
 tn\esprit\projetintegre\services\OrderService.class
 tn\esprit\projetintegre\controllers\MissionController.class
+tn\esprit\projetintegre\dto\ResetPasswordRequest.class
 tn\esprit\projetintegre\entities\CouponUsage.class
 tn\esprit\projetintegre\enums\PaymentStatus.class
 tn\esprit\projetintegre\dto\TicketRequestDTO$UpdateRequest.class

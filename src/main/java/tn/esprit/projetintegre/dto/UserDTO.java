@@ -31,6 +31,7 @@ public class UserDTO {
     private String bio;
     private String location;
     private Boolean isActive;
+    private Boolean isSuspended;
     private Integer loyaltyPoints;
     private String loyaltyTier;
     private Integer experiencePoints;

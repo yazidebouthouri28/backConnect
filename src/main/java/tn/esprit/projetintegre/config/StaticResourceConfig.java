@@ -23,13 +23,8 @@ public class StaticResourceConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/webjars/**")
                 .addResourceLocations("classpath:/META-INF/resources/webjars/");
 
-        // Ressources statiques générales
-        registry.addResourceHandler("/**")
-                .addResourceLocations(
-                        "classpath:/META-INF/resources/",
-                        "classpath:/resources/",
-                        "classpath:/static/",
-                        "classpath:/public/"
-                );
+        // Avoid mapping a global "/**" handler here:
+        // it can turn missing API routes into static-resource lookup errors
+        // (e.g. "No static resource ...") instead of proper REST 404 responses.
     }
 }

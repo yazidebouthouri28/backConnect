@@ -5,12 +5,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.projetintegre.entities.Site;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.SiteRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -19,17 +21,18 @@ public class SiteService {
 
     private final SiteRepository siteRepository;
     private final UserRepository userRepository;
+    private final SiteImageStorageService siteImageStorageService;
 
     public List<Site> getAllSites() {
         return siteRepository.findAll();
     }
 
     public Page<Site> getActiveSites(Pageable pageable) {
-        return siteRepository.findByIsActiveTrue(pageable);
+        return siteRepository.findListedActiveSites(pageable);
     }
 
     public List<Site> getActiveSites() {
-        return siteRepository.findByIsActiveTrue();
+        return siteRepository.findListedActiveSites();
     }
 
     public Site getSiteById(Long id) {
@@ -55,9 +58,15 @@ public class SiteService {
 
     @Transactional
     public Site createSite(Site site, Long ownerId) {
+        if (ownerId == null) {
+            throw new IllegalArgumentException("ownerId is required");
+        }
         User owner = userRepository.findById(ownerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
         site.setOwner(owner);
+        if (site.getIsActive() == null) {
+            site.setIsActive(true);
+        }
         return siteRepository.save(site);
     }
 
@@ -86,5 +95,31 @@ public class SiteService {
         Site site = getSiteById(id);
         site.setIsActive(false);
         siteRepository.save(site);
+    }
+
+    @Transactional
+    public Site appendSiteImages(Long id, List<MultipartFile> files) {
+        Site site = getSiteById(id);
+        List<String> urls = siteImageStorageService.storeSiteImages(id, files);
+        if (urls.isEmpty()) {
+            return site;
+        }
+        List<String> images = new ArrayList<>(site.getImages() != null ? site.getImages() : List.of());
+        images.addAll(urls);
+        site.setImages(images);
+        if ((site.getThumbnail() == null || site.getThumbnail().isBlank()) && !images.isEmpty()) {
+            site.setThumbnail(images.get(0));
+        }
+        return siteRepository.save(site);
+    }
+
+    @Transactional
+    public Site removeSiteImageByUrl(Long id, String url) {
+        Site site = getSiteById(id);
+        if (site.getImages() != null) {
+            site.getImages().removeIf(u -> u != null && u.equals(url));
+        }
+        siteImageStorageService.deleteByPublicUrl(url);
+        return siteRepository.save(site);
     }
 }

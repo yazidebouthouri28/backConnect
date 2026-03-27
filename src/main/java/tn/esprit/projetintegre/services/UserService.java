@@ -139,6 +139,7 @@ public class UserService {
                 .bio(user.getBio())
                 .location(user.getLocation())
                 .isActive(user.getIsActive())
+                .isSuspended(user.getIsSuspended())
                 .loyaltyPoints(user.getLoyaltyPoints())
                 .loyaltyTier(user.getLoyaltyTier())
                 .experiencePoints(user.getExperiencePoints())

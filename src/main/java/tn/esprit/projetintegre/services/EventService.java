@@ -58,19 +58,48 @@ public class EventService {
     }
 
     @Transactional
-    public Event createEvent(Event event, Long siteId, Long organizerId) {
+    public Event createEvent(Event event, Long siteId, Long organizerId, String authenticatedUsername) {
         if (siteId != null) {
             Site site = siteRepository.findById(siteId)
                     .orElseThrow(() -> new ResourceNotFoundException("Site not found"));
             event.setSite(site);
         }
 
-        Organizer organizer = organizerRepository.findById(organizerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Organizer not found"));
+        Organizer organizer = resolveOrganizer(organizerId, authenticatedUsername);
         event.setOrganizer(organizer);
-        event.setStatus(EventStatus.DRAFT);
+        if (event.getStatus() == null) {
+            event.setStatus(EventStatus.DRAFT);
+        }
 
         return eventRepository.save(event);
+    }
+
+    private Organizer resolveOrganizer(Long organizerId, String authenticatedUsername) {
+        // If frontend passes an organizerId but it's invalid/not found, fall back to authenticated user.
+        if (organizerId != null && organizerId > 0) {
+            var byId = organizerRepository.findById(organizerId);
+            if (byId.isPresent()) {
+                return byId.get();
+            }
+        }
+
+        if (authenticatedUsername == null || authenticatedUsername.isBlank()) {
+            throw new ResourceNotFoundException("Organizer not found");
+        }
+
+        User user = userRepository.findByUsername(authenticatedUsername)
+                .or(() -> userRepository.findByEmail(authenticatedUsername))
+                .orElseThrow(() -> new ResourceNotFoundException("Organizer not found"));
+
+        return organizerRepository.findByUser_Id(user.getId())
+                .orElseGet(() -> organizerRepository.save(Organizer.builder()
+                        .user(user)
+                        .companyName(user.getName() + "'s Organization")
+                        .verified(true)
+                        .active(true)
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+                        .build()));
     }
 
     @Transactional

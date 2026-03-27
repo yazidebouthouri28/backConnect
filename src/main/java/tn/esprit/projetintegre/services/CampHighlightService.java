@@ -2,6 +2,7 @@ package tn.esprit.projetintegre.services;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import tn.esprit.projetintegre.dto.request.CampHighlightRequest;
 import tn.esprit.projetintegre.dto.response.CampHighlightResponse;
@@ -23,21 +24,25 @@ public class CampHighlightService {
     private final SiteModuleMapper siteMapper;
     private final SiteImageStorageService siteImageStorageService;
 
+    @Transactional(readOnly = true)
     public List<CampHighlightResponse> getAllHighlights() {
-        return siteMapper.toCampHighlightResponseList(campHighlightRepository.findAll());
+        return siteMapper.toCampHighlightResponseList(campHighlightRepository.findAllWithSite());
     }
 
+    @Transactional(readOnly = true)
     public List<CampHighlightResponse> getHighlightsBySite(Long siteId) {
         return siteMapper.toCampHighlightResponseList(campHighlightRepository.findBySite_Id(siteId));
     }
 
+    @Transactional(readOnly = true)
     public List<CampHighlightResponse> getHighlightsBySiteAndCategory(Long siteId, HighlightCategory category) {
         return siteMapper
                 .toCampHighlightResponseList(campHighlightRepository.findBySite_IdAndCategory(siteId, category));
     }
 
+    @Transactional(readOnly = true)
     public CampHighlightResponse getHighlightById(Long id) {
-        CampHighlight highlight = campHighlightRepository.findById(id)
+        CampHighlight highlight = campHighlightRepository.findByIdWithSite(id)
                 .orElseThrow(() -> new RuntimeException("Highlight not found"));
         return siteMapper.toResponse(highlight);
     }

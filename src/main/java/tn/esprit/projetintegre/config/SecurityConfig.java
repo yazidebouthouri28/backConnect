@@ -52,7 +52,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/error"
+                                "/error",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/actuator/prometheus"
                         ).permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, 
                                 "/api/sites/**", 
@@ -60,7 +63,8 @@ public class SecurityConfig {
                                 "/api/camp-highlights/site/**", 
                                 "/api/virtual-tours/site/**", 
                                 "/api/certifications/site/**",
-                                "/api/sponsors/**"
+                                "/api/sponsors/**",
+                                "/api/events/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()

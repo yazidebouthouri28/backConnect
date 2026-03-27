@@ -2,10 +2,10 @@ package tn.esprit.projetintegre.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import tn.esprit.projetintegre.dto.request.CampHighlightRequest;
 import tn.esprit.projetintegre.dto.response.CampHighlightResponse;
 import tn.esprit.projetintegre.enums.HighlightCategory;
@@ -49,11 +49,33 @@ public class CampHighlightController {
         return ResponseEntity.ok(campHighlightService.createHighlight(siteId, request));
     }
 
-    @PostMapping(value = "/site/{siteId}/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /**
+     * Uses {@link MultipartHttpServletRequest} so multipart parsing matches browser FormData
+     * (avoids 400s seen with {@code @RequestPart} / strict {@code consumes} on some setups).
+     */
+    @PostMapping("/site/{siteId}/media")
     public ResponseEntity<Map<String, String>> uploadHighlightMedia(
             @PathVariable Long siteId,
-            @RequestPart("file") MultipartFile file) {
-        String mediaUrl = campHighlightService.uploadHighlightMedia(siteId, file);
+            MultipartHttpServletRequest request) {
+        MultipartFile resolved = request.getFile("file");
+        if (resolved == null || resolved.isEmpty()) {
+            resolved = request.getFile("media");
+        }
+        if (resolved == null || resolved.isEmpty()) {
+            resolved = request.getFile("image");
+        }
+        if (resolved == null || resolved.isEmpty()) {
+            for (MultipartFile f : request.getFileMap().values()) {
+                if (f != null && !f.isEmpty()) {
+                    resolved = f;
+                    break;
+                }
+            }
+        }
+        if (resolved == null || resolved.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Missing file part (expected name: file)"));
+        }
+        String mediaUrl = campHighlightService.uploadHighlightMedia(siteId, resolved);
         return ResponseEntity.ok(Map.of("url", mediaUrl));
     }
 

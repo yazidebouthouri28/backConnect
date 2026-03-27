@@ -80,7 +80,11 @@ public class SiteImageStorageService {
         }
 
         String contentType = file.getContentType();
-        if (contentType == null) {
+        if (contentType == null || contentType.isBlank()
+                || "application/octet-stream".equalsIgnoreCase(contentType.trim())) {
+            contentType = inferContentTypeFromFilename(file.getOriginalFilename());
+        }
+        if (contentType == null || contentType.isBlank()) {
             throw new IllegalArgumentException("Invalid media type");
         }
 
@@ -123,6 +127,47 @@ public class SiteImageStorageService {
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
         String publicPath = "/uploads/camp-highlights/" + siteId + "/" + filename;
         return baseUrl + publicPath;
+    }
+
+    /**
+     * Browsers often omit or misreport {@code Content-Type} for multipart parts; infer from extension.
+     */
+    private String inferContentTypeFromFilename(String originalName) {
+        if (originalName == null || originalName.isBlank()) {
+            return null;
+        }
+        String lower = originalName.toLowerCase(Locale.ROOT);
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) {
+            return "image/jpeg";
+        }
+        if (lower.endsWith(".png")) {
+            return "image/png";
+        }
+        if (lower.endsWith(".gif")) {
+            return "image/gif";
+        }
+        if (lower.endsWith(".webp")) {
+            return "image/webp";
+        }
+        if (lower.endsWith(".bmp")) {
+            return "image/bmp";
+        }
+        if (lower.endsWith(".svg")) {
+            return "image/svg+xml";
+        }
+        if (lower.endsWith(".mp4")) {
+            return "video/mp4";
+        }
+        if (lower.endsWith(".webm")) {
+            return "video/webm";
+        }
+        if (lower.endsWith(".mov")) {
+            return "video/quicktime";
+        }
+        if (lower.endsWith(".mkv")) {
+            return "video/x-matroska";
+        }
+        return null;
     }
 
     public boolean deleteByPublicUrl(String url) {

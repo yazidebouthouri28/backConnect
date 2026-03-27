@@ -1,4 +1,3 @@
-// OrganizerController.java
 package tn.esprit.projetintegre.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,12 +20,20 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/organizers")
 @RequiredArgsConstructor
-
 @Tag(name = "Organizers", description = "Organizer management APIs")
 public class OrganizerController {
 
     private final OrganizerRepository organizerRepository;
     private final UserRepository userRepository;
+
+    // GET /api/organizers/by-user/{userId}
+    @GetMapping("/by-user/{userId}")
+    @Operation(summary = "Get organizer ID by user ID")
+    public ResponseEntity<ApiResponse<Long>> getOrganizerIdByUserId(@PathVariable Long userId) {
+        return organizerRepository.findByUser_Id(userId)
+                .map(organizer -> ResponseEntity.ok(ApiResponse.success(organizer.getId())))
+                .orElse(ResponseEntity.notFound().build());
+    }
 
     @GetMapping
     @Operation(summary = "Get all organizers")

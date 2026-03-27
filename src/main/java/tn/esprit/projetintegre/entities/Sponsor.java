@@ -3,6 +3,7 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import tn.esprit.projetintegre.enums.SponsorTier;
 
@@ -23,6 +24,7 @@ public class Sponsor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Size(min = 5, max = 100, message = "Name must be between 5 and 100 characters")
     @NotBlank(message = "Sponsor name is required")
     private String name;
 

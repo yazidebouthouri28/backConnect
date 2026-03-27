@@ -1,12 +1,8 @@
 package tn.esprit.projetintegre.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.*;
+import lombok.*;
+import tn.esprit.projetintegre.enums.Role;
 
 @Data
 @Builder
@@ -32,4 +28,7 @@ public class RegisterRequest {
 
     private String phone;
     private String address;
+
+    // New field
+    private Role role;
 }

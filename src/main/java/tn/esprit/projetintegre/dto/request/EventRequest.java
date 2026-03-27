@@ -64,7 +64,6 @@ public class EventRequest {
     
     private Long siteId;
     
-    @NotNull(message = "L'identifiant de l'organisateur est obligatoire")
     private Long organizerId;
     
     private EventStatus status;

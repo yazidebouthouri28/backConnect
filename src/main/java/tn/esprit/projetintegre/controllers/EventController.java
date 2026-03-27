@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.PageResponse;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
+@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
 @RequiredArgsConstructor
 @Tag(name = "Events", description = "Event management endpoints")
 @SecurityRequirement(name = "Bearer Authentication")
@@ -102,8 +104,15 @@ public class EventController {
     @PreAuthorize("hasAnyRole('ADMIN', 'ORGANIZER')")
     @Operation(summary = "Créer un événement")
     public ResponseEntity<ApiResponse<EventResponse>> createEvent(
-            @Valid @RequestBody EventRequest request) {
-        Event created = eventService.createEvent(mapToEvent(request), request.getSiteId(), request.getOrganizerId());
+            @Valid @RequestBody EventRequest request,
+            Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : null;
+        Event created = eventService.createEvent(
+                mapToEvent(request),
+                request.getSiteId(),
+                request.getOrganizerId(),
+                username
+        );
         return ResponseEntity.ok(ApiResponse.success("Événement créé avec succès", dtoMapper.toEventResponse(created)));
     }
 

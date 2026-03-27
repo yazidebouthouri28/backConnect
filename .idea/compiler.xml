@@ -14,6 +14,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="backConnect" options="-parameters" />
       <module name="projet-integre" options="-parameters" />
       <module name="projetPi" options="-parameters" />
     </option>

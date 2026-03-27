@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.PageResponse;
@@ -14,12 +15,18 @@ import tn.esprit.projetintegre.dto.request.SponsorRequest;
 import tn.esprit.projetintegre.dto.request.SponsorshipRequest;
 import tn.esprit.projetintegre.dto.response.SponsorResponse;
 import tn.esprit.projetintegre.dto.response.SponsorshipResponse;
+import tn.esprit.projetintegre.dto.response.UserSponsorRequestResponse;
 import tn.esprit.projetintegre.entities.Sponsor;
 import tn.esprit.projetintegre.entities.Sponsorship;
+import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.enums.SponsorStatus;
 import tn.esprit.projetintegre.enums.SponsorTier;
 import tn.esprit.projetintegre.mapper.DtoMapper;
+import tn.esprit.projetintegre.repositories.SponsorRepository;
+import tn.esprit.projetintegre.repositories.UserRepository;
 import tn.esprit.projetintegre.services.SponsorService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -30,12 +37,21 @@ public class SponsorController {
 
     private final SponsorService sponsorService;
     private final DtoMapper dtoMapper;
+    private final UserRepository userRepository;
+    private final SponsorRepository sponsorRepository;
 
     @GetMapping
     @Operation(summary = "Get all sponsors")
     public ResponseEntity<ApiResponse<List<SponsorResponse>>> getAllSponsors() {
         List<Sponsor> sponsors = sponsorService.getAllSponsors();
         return ResponseEntity.ok(ApiResponse.success(dtoMapper.toSponsorResponseList(sponsors)));
+    }
+
+    // Frontend compatibility alias
+    @GetMapping("/all")
+    @Operation(summary = "Get all sponsors (alias)")
+    public ResponseEntity<ApiResponse<List<SponsorResponse>>> getAllSponsorsAlias() {
+        return getAllSponsors();
     }
 
     @GetMapping("/paged")
@@ -171,6 +187,63 @@ public class SponsorController {
     public ResponseEntity<ApiResponse<Void>> deleteSponsorship(@PathVariable Long id) {
         sponsorService.deleteSponsorship(id);
         return ResponseEntity.ok(ApiResponse.success("Sponsorship deleted successfully", null));
+    }
+
+    @GetMapping("/pending-requests")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get pending sponsor signup requests")
+    public ResponseEntity<ApiResponse<List<UserSponsorRequestResponse>>> getPendingSponsorRequests() {
+        var users = userRepository.findBySponsorStatus(SponsorStatus.PENDING);
+        var response = users.stream().map(u -> UserSponsorRequestResponse.builder()
+                .id(u.getId())
+                .name(u.getName())
+                .email(u.getEmail())
+                .phone(u.getPhone())
+                .username(u.getUsername())
+                .sponsorStatus(u.getSponsorStatus())
+                .createdAt(u.getCreatedAt())
+                .build()).toList();
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PutMapping("/pending-requests/{userId}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Approve sponsor signup request")
+    public ResponseEntity<ApiResponse<Void>> approveSponsorRequest(@PathVariable Long userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        user.setRole(Role.SPONSOR);
+        user.setSponsorStatus(SponsorStatus.APPROVED);
+        user.setSponsorReviewedAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        // Ensure approved sponsor is visible in sponsor pages.
+        if (user.getEmail() != null && !sponsorRepository.existsByEmail(user.getEmail())) {
+            Sponsor sponsor = Sponsor.builder()
+                    .name(user.getName() != null ? user.getName() : user.getUsername())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .address(user.getAddress())
+                    .country(user.getCountry())
+                    .isActive(true)
+                    .build();
+            sponsorRepository.save(sponsor);
+        }
+
+        return ResponseEntity.ok(ApiResponse.success("Sponsor request approved", null));
+    }
+
+    @PutMapping("/pending-requests/{userId}/reject")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Reject sponsor signup request")
+    public ResponseEntity<ApiResponse<Void>> rejectSponsorRequest(@PathVariable Long userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setSponsorStatus(SponsorStatus.REJECTED);
+        user.setSponsorReviewedAt(LocalDateTime.now());
+        userRepository.save(user);
+        return ResponseEntity.ok(ApiResponse.success("Sponsor request rejected", null));
     }
 
     private Sponsorship toSponsorshipEntity(SponsorshipRequest request) {
