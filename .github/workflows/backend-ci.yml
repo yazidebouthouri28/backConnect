@@ -38,10 +38,10 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run unit tests
-        run: ./mvnw test -Dtest='!ProjetIntegreApplicationTests' -B
+        run: bash mvnw test -Dtest='!ProjetIntegreApplicationTests' -B
 
       - name: Build JAR
-        run: ./mvnw package -DskipTests -B
+        run: bash mvnw package -DskipTests -B
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
