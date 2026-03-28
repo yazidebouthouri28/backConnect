@@ -35,7 +35,7 @@ jobs:
           cache: maven
 
       - name: Run unit tests
-        run: mvn test -Dexcludes="**/BackConnectApplicationTests.java,**/ProjetIntegreApplicationTests.java" -B
+        run: mvn test -B
 
       - name: Build JAR
         run: mvn package -DskipTests -B
