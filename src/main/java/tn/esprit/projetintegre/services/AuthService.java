@@ -10,7 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import tn.esprit.projetintegre.dto.AuthRequest;
 import tn.esprit.projetintegre.dto.AuthResponse;
 import tn.esprit.projetintegre.dto.RegisterRequest;
@@ -49,8 +48,6 @@ public class AuthService {
     private int resetCodeExpirationMinutes;
     @Value("${spring.mail.username}")
     private String resetCodeSender;
-    @Value("${spring.mail.password:}")
-    private String resetCodeSenderPassword;
 
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -167,12 +164,7 @@ public class AuthService {
             user.setPasswordResetToken(resetCode);
             user.setPasswordResetExpires(LocalDateTime.now().plusMinutes(resetCodeExpirationMinutes));
             userRepository.save(user);
-            if (isResetEmailConfigured()) {
-                sendResetCodeEmail(user.getEmail(), resetCode);
-            } else {
-                log.warn("SMTP not configured; returning dev reset code for {}", maskEmail(user.getEmail()));
-                response.put("devCode", resetCode);
-            }
+            sendResetCodeEmail(user.getEmail(), resetCode);
         } else {
             log.info("Password reset requested for non-existent email: {}", maskEmail(email));
         }
@@ -217,17 +209,8 @@ public class AuthService {
         }
     }
 
-    private boolean isResetEmailConfigured() {
-        if (!StringUtils.hasText(resetCodeSender) || !StringUtils.hasText(resetCodeSenderPassword)) {
-            return false;
-        }
-
-        return !"your-email@gmail.com".equalsIgnoreCase(resetCodeSender.trim())
-                && !"your-app-password".equals(resetCodeSenderPassword.trim());
-    }
-
     private String maskEmail(String email) {
-        if (!StringUtils.hasText(email)) {
+        if (email == null || email.isBlank()) {
             return "<empty>";
         }
 
