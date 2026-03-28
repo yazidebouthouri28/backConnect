@@ -34,14 +34,11 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Set mvnw executable
-        run: chmod +x mvnw
-
       - name: Run unit tests
-        run: bash mvnw test -Dtest='!ProjetIntegreApplicationTests' -B
+        run: mvn test -Dtest='!ProjetIntegreApplicationTests' -B
 
       - name: Build JAR
-        run: bash mvnw package -DskipTests -B
+        run: mvn package -DskipTests -B
 
       - name: Upload JAR artifact
         uses: actions/upload-artifact@v4
