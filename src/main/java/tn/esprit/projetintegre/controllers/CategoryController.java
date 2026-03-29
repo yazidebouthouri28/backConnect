@@ -70,8 +70,8 @@ public class CategoryController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Create a category (Admin only)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    @Operation(summary = "Create a category (Admin/Seller)")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CategoryRequest request,
             @RequestParam(required = false) Long parentId) {
@@ -81,22 +81,22 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update a category (Admin only)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    @Operation(summary = "Update a category (Admin/Seller)")
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
             @PathVariable Long id,
             @Valid @RequestBody CategoryRequest request) {
-        Category categoryDetails = toEntity(request);
-        Category updated = categoryService.updateCategory(id, categoryDetails);
+        Category category = toEntity(request);
+        Category updated = categoryService.updateCategory(id, category);
         return ResponseEntity.ok(ApiResponse.success("Category updated successfully", dtoMapper.toCategoryResponse(updated)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Delete a category (Admin only)")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SELLER')")
+    @Operation(summary = "Delete a category (Admin/Seller)")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
-        return ResponseEntity.ok(ApiResponse.success("Category deleted", null));
+        return ResponseEntity.ok(ApiResponse.success("Category deleted successfully", null));
     }
 
     // Mapping method

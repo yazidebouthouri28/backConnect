@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.*;
+import tn.esprit.projetintegre.entities.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

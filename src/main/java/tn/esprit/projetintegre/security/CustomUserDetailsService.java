@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
 import java.util.Collections;

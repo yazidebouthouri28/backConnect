@@ -7,6 +7,7 @@ import tn.esprit.projetintegre.dto.request.ShippingAddressRequest;
 import tn.esprit.projetintegre.dto.response.ShippingAddressResponse;
 import tn.esprit.projetintegre.entities.ShippingAddress;
 import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.ShippingAddressRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;

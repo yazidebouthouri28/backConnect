@@ -2,6 +2,7 @@ package tn.esprit.projetintegre.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.esprit.projetintegre.entities.Order;
 
 import java.math.BigDecimal;
 

@@ -9,6 +9,7 @@ import tn.esprit.projetintegre.dto.request.WarehouseRequest;
 import tn.esprit.projetintegre.dto.response.WarehouseResponse;
 import tn.esprit.projetintegre.entities.Warehouse;
 import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.WarehouseRepository;

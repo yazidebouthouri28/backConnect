@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import tn.esprit.projetintegre.enums.StatutIntervention;
 import tn.esprit.projetintegre.enums.TypeUrgence;
+import tn.esprit.projetintegre.entities.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

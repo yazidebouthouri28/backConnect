@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import tn.esprit.projetintegre.enums.PaymentStatus;
 import tn.esprit.projetintegre.enums.ReservationStatus;
+import tn.esprit.projetintegre.entities.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

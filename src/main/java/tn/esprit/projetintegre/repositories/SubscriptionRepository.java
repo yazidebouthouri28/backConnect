@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import tn.esprit.projetintegre.entities.Subscription;
 import tn.esprit.projetintegre.enums.SubscriptionStatus;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,4 +27,7 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
 
     @EntityGraph(attributePaths = {"user"})
     List<Subscription> findByStatus(SubscriptionStatus status);
+
+    @EntityGraph(attributePaths = {"user"})
+    List<Subscription> findByAutoRenewTrueAndRenewalDateBefore(LocalDateTime date);
 }

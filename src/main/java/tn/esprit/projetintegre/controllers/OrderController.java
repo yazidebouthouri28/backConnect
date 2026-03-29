@@ -3,7 +3,6 @@ package tn.esprit.projetintegre.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -12,7 +11,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.PageResponse;
-import tn.esprit.projetintegre.dto.request.OrderRequest;
 import tn.esprit.projetintegre.dto.response.OrderResponse;
 import tn.esprit.projetintegre.entities.Order;
 import tn.esprit.projetintegre.enums.OrderStatus;
@@ -78,10 +76,10 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(dtoMapper.toOrderResponse(order)));
     }
 
-    @PostMapping
-    @Operation(summary = "Create order from cart")
-    public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
-            @RequestParam Long userId,
+    @PostMapping("/user/{userId}/checkout")
+    @Operation(summary = "Create order from cart (checkout)")
+    public ResponseEntity<ApiResponse<OrderResponse>> checkoutFromCart(
+            @PathVariable Long userId,
             @RequestParam String shippingName,
             @RequestParam String shippingPhone,
             @RequestParam String shippingAddress,

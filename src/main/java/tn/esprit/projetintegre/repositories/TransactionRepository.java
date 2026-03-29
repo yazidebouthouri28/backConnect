@@ -6,8 +6,10 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import tn.esprit.projetintegre.entities.Transaction;
+import tn.esprit.projetintegre.enums.PaymentStatus;
 import tn.esprit.projetintegre.enums.TransactionType;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -24,4 +26,13 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     @EntityGraph(attributePaths = {"wallet", "wallet.user"})
     Page<Transaction> findByType(TransactionType type, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"wallet", "wallet.user"})
+    List<Transaction> findByWalletIdOrderByCreatedAtDesc(Long walletId);
+
+    @EntityGraph(attributePaths = {"wallet", "wallet.user"})
+    List<Transaction> findAllByUserIdOrderByCreatedAtDesc(Long userId);
+
+    @EntityGraph(attributePaths = {"wallet", "wallet.user"})
+    List<Transaction> findByStatus(PaymentStatus status);
 }

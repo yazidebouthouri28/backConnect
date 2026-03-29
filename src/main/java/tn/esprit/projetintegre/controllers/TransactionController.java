@@ -49,7 +49,7 @@ public class TransactionController {
     }
 
     @GetMapping("/user/{userId}")
-    @Operation(summary = "Get transactions by user ID")
+    @Operation(summary = "Get transactions by user ID (paginated)")
     public ResponseEntity<ApiResponse<PageResponse<TransactionResponse>>> getTransactionsByUserId(
             @PathVariable Long userId, Pageable pageable) {
         Page<Transaction> page = transactionService.getTransactionsByUserId(userId, pageable);
@@ -58,7 +58,7 @@ public class TransactionController {
     }
 
     @GetMapping("/wallet/{walletId}")
-    @Operation(summary = "Get transactions by wallet ID")
+    @Operation(summary = "Get transactions by wallet ID (paginated)")
     public ResponseEntity<ApiResponse<PageResponse<TransactionResponse>>> getTransactionsByWalletId(
             @PathVariable Long walletId, Pageable pageable) {
         Page<Transaction> page = transactionService.getTransactionsByWalletId(walletId, pageable);
@@ -74,5 +74,32 @@ public class TransactionController {
         Page<Transaction> page = transactionService.getTransactionsByType(type, pageable);
         Page<TransactionResponse> response = page.map(dtoMapper::toTransactionResponse);
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+    }
+
+    @GetMapping("/pending/all")
+    @Operation(summary = "List all pending transactions")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> getPendingTransactions() {
+        List<TransactionResponse> list = transactionService.getPendingTransactions().stream()
+                .map(dtoMapper::toTransactionResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    @GetMapping("/wallet/{walletId}/list-all")
+    @Operation(summary = "List transactions for wallet (non-paginated)")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> listByWallet(@PathVariable Long walletId) {
+        List<TransactionResponse> list = transactionService.getTransactionsByWalletIdList(walletId).stream()
+                .map(dtoMapper::toTransactionResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(list));
+    }
+
+    @GetMapping("/user/{userId}/list-all")
+    @Operation(summary = "List transactions for user (non-paginated)")
+    public ResponseEntity<ApiResponse<List<TransactionResponse>>> listByUser(@PathVariable Long userId) {
+        List<TransactionResponse> list = transactionService.getTransactionsByUserIdList(userId).stream()
+                .map(dtoMapper::toTransactionResponse)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(list));
     }
 }

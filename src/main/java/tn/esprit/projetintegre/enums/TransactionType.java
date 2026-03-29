@@ -6,5 +6,6 @@ public enum TransactionType {
     DEPOSIT,
     WITHDRAWAL,
     SUBSCRIPTION,
-    TRANSFER
-}
+    TRANSFER,
+    CREDIT,
+    DEBIT }

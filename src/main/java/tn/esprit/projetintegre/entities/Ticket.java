@@ -3,6 +3,7 @@ package tn.esprit.projetintegre.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.esprit.projetintegre.enums.TicketStatus;
+import tn.esprit.projetintegre.entities.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

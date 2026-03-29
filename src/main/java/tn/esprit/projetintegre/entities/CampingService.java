@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import tn.esprit.projetintegre.enums.ServiceType;
+import tn.esprit.projetintegre.entities.User;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

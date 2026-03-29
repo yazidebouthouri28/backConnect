@@ -12,6 +12,10 @@ import tn.esprit.projetintegre.enums.AlertStatus;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.AlertRepository;
 import tn.esprit.projetintegre.repositories.SiteRepository;
+import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.enums.AlertStatus;
+import tn.esprit.projetintegre.exception.ResourceNotFoundException;
+import tn.esprit.projetintegre.repositories.AlertRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
 import java.time.LocalDateTime;
@@ -57,6 +61,7 @@ public class AlertService {
                     .orElseThrow(() -> new ResourceNotFoundException("Site not found with id: " + siteId));
             alert.setSite(site);
         }
+
 
         alert.setStatus(AlertStatus.ACTIVE);
         alert.setReportedAt(LocalDateTime.now());

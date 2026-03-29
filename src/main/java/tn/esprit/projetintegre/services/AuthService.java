@@ -7,6 +7,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,13 +40,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final CartRepository cartRepository;
     private final WalletRepository walletRepository;
-    private final OrganizerRepository organizerRepository; // added
+    private final OrganizerRepository organizerRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
     private final JavaMailSender mailSender;
+
     @Value("${app.auth.reset-code-expiration-minutes:10}")
     private int resetCodeExpirationMinutes;
+
     @Value("${spring.mail.username}")
     private String resetCodeSender;
 
@@ -79,7 +82,7 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         user.setUpdatedAt(LocalDateTime.now());
 
-        user = userRepository.saveAndFlush(user); // ensure ID generated
+        user = userRepository.saveAndFlush(user);
 
         // Create cart for the new user
         Cart cart = new Cart();
@@ -110,9 +113,7 @@ public class AuthService {
             organizerRepository.save(organizer);
         }
 
-        // Generate JWT directly from the persisted username.
-        // Avoiding an immediate authentication step prevents transaction rollback
-        // in case AuthenticationManager fails for transient security-context reasons.
+        // Generate token
         String token = jwtTokenProvider.generateToken(user.getUsername());
 
         return AuthResponse.builder()
@@ -127,7 +128,7 @@ public class AuthService {
     }
 
     public AuthResponse login(AuthRequest request) {
-        var authentication = authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 

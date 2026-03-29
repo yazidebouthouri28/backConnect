@@ -2,6 +2,7 @@ package tn.esprit.projetintegre.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
+import tn.esprit.projetintegre.entities.User;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

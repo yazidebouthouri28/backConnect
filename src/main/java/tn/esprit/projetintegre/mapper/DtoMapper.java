@@ -111,7 +111,7 @@ public class DtoMapper {
         return entities.stream().map(this::toMissionResponse).collect(Collectors.toList());
     }
 
-    // --- UserMission Mapping (complétée) ---
+    // UserMission Mapping
     public UserMissionResponse toUserMissionResponse(UserMission entity) {
         if (entity == null)
             return null;
@@ -131,6 +131,12 @@ public class DtoMapper {
                 .build();
     }
 
+    public List<UserMissionResponse> toUserMissionResponseList(List<UserMission> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toUserMissionResponse).collect(Collectors.toList());
+    }
+
     // Notification Mapping
     public NotificationResponse toNotificationResponse(Notification entity) {
         if (entity == null)
@@ -144,8 +150,13 @@ public class DtoMapper {
                 .isRead(entity.getIsRead())
                 .actionUrl(entity.getActionUrl())
                 .createdAt(entity.getCreatedAt())
-
                 .build();
+    }
+
+    public List<NotificationResponse> toNotificationResponseList(List<Notification> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toNotificationResponse).collect(Collectors.toList());
     }
 
     // Sponsorship Mapping
@@ -192,17 +203,17 @@ public class DtoMapper {
                 .userId(entity.getUser() != null ? entity.getUser().getId() : null)
                 .userName(entity.getUser() != null ? entity.getUser().getName() : null)
                 .planName(entity.getPlanName())
-                .planDescription(entity.getPlanType()) // planType de l'entité -> planDescription du DTO
+                .planDescription(entity.getPlanType())
                 .price(entity.getPrice())
-                .billingCycle(entity.getPlanType()) // planType de l'entité -> billingCycle du DTO
+                .billingCycle(entity.getPlanType())
                 .status(entity.getStatus())
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
-                .nextBillingDate(entity.getRenewalDate()) // renewalDate de l'entité -> nextBillingDate du DTO
+                .nextBillingDate(entity.getRenewalDate())
                 .autoRenew(entity.getAutoRenew())
-                .isTrial(false) // Champ non présent dans l'entité
-                .trialEndDate(null) // Champ non présent dans l'entité
-                .cancelledAt(null) // Champ non présent dans l'entité
+                .isTrial(false)
+                .trialEndDate(null)
+                .cancelledAt(null)
                 .createdAt(entity.getCreatedAt())
                 .build();
     }
@@ -214,7 +225,6 @@ public class DtoMapper {
     }
 
     // Transaction Mapping
-    // Transaction Mapping (corrigée)
     public TransactionResponse toTransactionResponse(Transaction entity) {
         if (entity == null)
             return null;
@@ -232,7 +242,6 @@ public class DtoMapper {
                         ? entity.getWallet().getUser().getId()
                         : null)
                 .createdAt(entity.getCreatedAt())
-                // Supprimé car absent du DTO
                 .build();
     }
 
@@ -242,7 +251,22 @@ public class DtoMapper {
         return entities.stream().map(this::toTransactionResponse).collect(Collectors.toList());
     }
 
-    // Wallet Mapping (complétée)
+    // Wallet Mapping
+    public WalletResponse toWalletResponse(Wallet entity) {
+        if (entity == null)
+            return null;
+        return WalletResponse.builder()
+                .id(entity.getId())
+                .userId(entity.getUser() != null ? entity.getUser().getId() : null)
+                .userName(entity.getUser() != null ? entity.getUser().getName() : null)
+                .balance(entity.getBalance())
+                .currency(entity.getCurrency())
+                .isActive(entity.getIsActive())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .build();
+    }
+
     public List<WalletResponse> toWalletResponseList(List<Wallet> entities) {
         if (entities == null)
             return Collections.emptyList();
@@ -270,13 +294,6 @@ public class DtoMapper {
         return entities.stream().map(this::toWishlistResponse).collect(Collectors.toList());
     }
 
-    // Ticket Mapping (complété)
-    public List<TicketResponse> toTicketResponseList(List<Ticket> entities) {
-        if (entities == null)
-            return Collections.emptyList();
-        return entities.stream().map(this::toTicketResponse).collect(Collectors.toList());
-    }
-
     // Ticket Mapping
     public TicketResponse toTicketResponse(Ticket entity) {
         if (entity == null)
@@ -286,27 +303,21 @@ public class DtoMapper {
                 .ticketNumber(entity.getTicketNumber())
                 .ticketType(entity.getTicketType())
                 .price(entity.getPrice())
-                .status(entity.getStatus()) // Utilise l'enum TicketStatus
+                .status(entity.getStatus())
                 .eventId(entity.getEvent() != null ? entity.getEvent().getId() : null)
                 .eventTitle(entity.getEvent() != null ? entity.getEvent().getTitle() : null)
                 .userId(entity.getUser() != null ? entity.getUser().getId() : null)
                 .userName(entity.getUser() != null ? entity.getUser().getName() : null)
                 .usedAt(entity.getUsedAt())
                 .createdAt(entity.getCreatedAt())
-                .purchasedAt(entity.getCreatedAt()) // Souvent identique à createdAt si pas de champ spécifique
+                .purchasedAt(entity.getCreatedAt())
                 .build();
     }
 
-    public List<NotificationResponse> toNotificationResponseList(List<Notification> entities) {
+    public List<TicketResponse> toTicketResponseList(List<Ticket> entities) {
         if (entities == null)
             return Collections.emptyList();
-        return entities.stream().map(this::toNotificationResponse).collect(Collectors.toList());
-    }
-
-    public List<UserMissionResponse> toUserMissionResponseList(List<UserMission> entities) {
-        if (entities == null)
-            return Collections.emptyList();
-        return entities.stream().map(this::toUserMissionResponse).collect(Collectors.toList());
+        return entities.stream().map(this::toTicketResponse).collect(Collectors.toList());
     }
 
     // Coupon Mapping
@@ -319,13 +330,13 @@ public class DtoMapper {
                 .description(entity.getDescription())
                 .discountType(entity.getType() != null ? entity.getType().name() : null)
                 .discountValue(entity.getDiscountValue())
-                .minOrderAmount(entity.getMinOrderAmount()) // Corrigé
+                .minOrderAmount(entity.getMinOrderAmount())
                 .maxDiscountAmount(entity.getMaxDiscountAmount())
-                .usageLimit(entity.getUsageLimit()) // Corrigé
-                .currentUsage(entity.getUsageCount()) // Corrigé
+                .usageLimit(entity.getUsageLimit())
+                .currentUsage(entity.getUsageCount())
                 .usageLimitPerUser(entity.getUsageLimitPerUser())
-                .validFrom(entity.getValidFrom()) // Corrigé
-                .validUntil(entity.getValidUntil()) // Corrigé
+                .validFrom(entity.getValidFrom())
+                .validUntil(entity.getValidUntil())
                 .isActive(entity.getIsActive())
                 .isValid(entity.isValid())
                 .applicableCategoryId(
@@ -404,6 +415,7 @@ public class DtoMapper {
         return entities.stream().map(this::toEventCommentResponse).collect(Collectors.toList());
     }
 
+    // Inventory Mapping
     public InventoryResponse toInventoryResponse(Inventory entity) {
         if (entity == null)
             return null;
@@ -479,6 +491,12 @@ public class DtoMapper {
                 .build();
     }
 
+    public List<SiteResponse> toSiteResponseList(List<Site> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toSiteResponse).collect(Collectors.toList());
+    }
+
     // Achievement Mapping
     public AchievementResponse toAchievementResponse(Achievement entity) {
         if (entity == null)
@@ -499,7 +517,6 @@ public class DtoMapper {
                 .build();
     }
 
-    // Liste de Achievement
     public List<AchievementResponse> toAchievementResponseList(List<Achievement> entities) {
         if (entities == null)
             return Collections.emptyList();
@@ -515,7 +532,7 @@ public class DtoMapper {
                 .orderNumber(entity.getOrderNumber())
                 .userId(entity.getUser() != null ? entity.getUser().getId() : null)
                 .userName(entity.getUser() != null ? entity.getUser().getName() : null)
-                .totalPrice(entity.getTotalAmount()) // Utilise totalAmount de l'entité pour totalPrice du DTO
+                .totalPrice(entity.getTotalAmount())
                 .subtotal(entity.getSubtotal())
                 .discountAmount(entity.getDiscountAmount())
                 .taxAmount(entity.getTaxAmount())
@@ -533,6 +550,12 @@ public class DtoMapper {
                 .updatedAt(entity.getUpdatedAt())
                 .deliveredAt(entity.getDeliveredAt())
                 .build();
+    }
+
+    public List<OrderResponse> toOrderResponseList(List<Order> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toOrderResponse).collect(Collectors.toList());
     }
 
     // Promotion Mapping
@@ -567,8 +590,6 @@ public class DtoMapper {
     }
 
     // Reservation Mapping
-
-    // Reservation Mapping
     public ReservationResponse toReservationResponse(Reservation entity) {
         if (entity == null)
             return null;
@@ -579,7 +600,6 @@ public class DtoMapper {
                 .userName(entity.getUser() != null ? entity.getUser().getName() : null)
                 .siteId(entity.getSite() != null ? entity.getSite().getId() : null)
                 .siteName(entity.getSite() != null ? entity.getSite().getName() : null)
-                // Conversion LocalDateTime vers LocalDate pour le DTO
                 .checkInDate(entity.getCheckInDate() != null ? entity.getCheckInDate().toLocalDate() : null)
                 .checkOutDate(entity.getCheckOutDate() != null ? entity.getCheckOutDate().toLocalDate() : null)
                 .numberOfNights(entity.getNumberOfNights())
@@ -589,8 +609,8 @@ public class DtoMapper {
                 .status(entity.getStatus())
                 .paymentStatus(entity.getPaymentStatus())
                 .specialRequests(entity.getSpecialRequests())
-                .contactPhone(entity.getGuestPhone()) // Mappé guestPhone vers contactPhone
-                .contactEmail(entity.getGuestEmail()) // Mappé guestEmail vers contactEmail
+                .contactPhone(entity.getGuestPhone())
+                .contactEmail(entity.getGuestEmail())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -602,14 +622,7 @@ public class DtoMapper {
         return entities.stream().map(this::toReservationResponse).collect(Collectors.toList());
     }
 
-    // Site Mapping
-    public List<SiteResponse> toSiteResponseList(List<Site> entities) {
-        if (entities == null)
-            return Collections.emptyList();
-        return entities.stream().map(this::toSiteResponse).collect(Collectors.toList());
-    }
-
-    // --- Sponsor Mapping ---
+    // Sponsor Mapping
     public SponsorResponse toSponsorResponse(Sponsor entity) {
         if (entity == null)
             return null;
@@ -629,9 +642,6 @@ public class DtoMapper {
                 .notes(entity.getNotes())
                 .tier(entity.getTier() != null ? entity.getTier() : SponsorTier.BRONZE)
                 .isActive(entity.getIsActive())
-                // Note: address, city, country, contactPosition, notes ne sont pas dans
-                // l'entité Sponsor fournie
-                // sponsorshipCount peut être calculé si la relation existe :
                 .sponsorshipCount(entity.getSponsorships() != null && Hibernate.isInitialized(entity.getSponsorships())
                         ? entity.getSponsorships().size()
                         : 0)
@@ -640,17 +650,10 @@ public class DtoMapper {
                 .build();
     }
 
-    // Sponsor Mapping
     public List<SponsorResponse> toSponsorResponseList(List<Sponsor> entities) {
         if (entities == null)
             return Collections.emptyList();
         return entities.stream().map(this::toSponsorResponse).collect(Collectors.toList());
-    }
-
-    public List<OrderResponse> toOrderResponseList(List<Order> entities) {
-        if (entities == null)
-            return Collections.emptyList();
-        return entities.stream().map(this::toOrderResponse).collect(Collectors.toList());
     }
 
     // Cart Mapping
@@ -678,18 +681,20 @@ public class DtoMapper {
                 .id(entity.getId())
                 .productId(entity.getProduct() != null ? entity.getProduct().getId() : null)
                 .productName(entity.getProduct() != null ? entity.getProduct().getName() : null)
-                // Correction : productImage devient productThumbnail
                 .productThumbnail(entity.getProduct() != null ? entity.getProduct().getThumbnail() : null)
                 .quantity(entity.getQuantity())
-                // Correction : price devient unitPrice pour correspondre au DTO
                 .unitPrice(entity.getPrice())
-                // Calcul du sous-total
                 .subtotal(entity.getPrice() != null && entity.getQuantity() != null
                         ? entity.getPrice().multiply(java.math.BigDecimal.valueOf(entity.getQuantity()))
                         : java.math.BigDecimal.ZERO)
-                // Ajout du stock disponible depuis le produit
                 .stockAvailable(entity.getProduct() != null ? entity.getProduct().getStockQuantity() : 0)
                 .build();
+    }
+
+    public List<CartItemResponse> toCartItemResponseList(List<CartItem> entities) {
+        if (entities == null)
+            return Collections.emptyList();
+        return entities.stream().map(this::toCartItemResponse).collect(Collectors.toList());
     }
 
     // UserAchievement Mapping
@@ -716,12 +721,6 @@ public class DtoMapper {
         if (entities == null)
             return Collections.emptyList();
         return entities.stream().map(this::toUserAchievementResponse).collect(Collectors.toList());
-    }
-
-    public List<CartItemResponse> toCartItemResponseList(List<CartItem> entities) {
-        if (entities == null)
-            return java.util.Collections.emptyList();
-        return entities.stream().map(this::toCartItemResponse).collect(java.util.stream.Collectors.toList());
     }
 
     // CampingService Mapping
@@ -787,21 +786,5 @@ public class DtoMapper {
         if (entities == null)
             return Collections.emptyList();
         return entities.stream().map(this::toAlertResponse).collect(Collectors.toList());
-    }
-
-    // Wallet Mapping
-    public WalletResponse toWalletResponse(Wallet entity) {
-        if (entity == null)
-            return null;
-        return WalletResponse.builder()
-                .id(entity.getId())
-                .userId(entity.getUser() != null ? entity.getUser().getId() : null)
-                .userName(entity.getUser() != null ? entity.getUser().getName() : null)
-                .balance(entity.getBalance())
-                .currency(entity.getCurrency())
-                .isActive(entity.getIsActive())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .build();
     }
 }

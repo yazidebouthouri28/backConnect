@@ -4,9 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Coupon;
+import tn.esprit.projetintegre.entities.CouponUsage;
+import tn.esprit.projetintegre.entities.Order;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.DuplicateResourceException;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.CouponRepository;
+import tn.esprit.projetintegre.repositories.CouponUsageRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +21,7 @@ import java.util.List;
 public class CouponService {
 
     private final CouponRepository couponRepository;
+    private final CouponUsageRepository couponUsageRepository;
 
     public List<Coupon> getAllCoupons() {
         return couponRepository.findAll();
@@ -38,6 +43,58 @@ public class CouponService {
     public Coupon getCouponByCode(String code) {
         return couponRepository.findByCode(code.toUpperCase())
                 .orElseThrow(() -> new ResourceNotFoundException("Coupon not found with code: " + code));
+    }
+
+    /**
+     * Validate coupon for a specific user (per-user limits, first-order rules).
+     */
+    public Coupon validateForUser(String code, User user, BigDecimal orderAmount) {
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException("Coupon code is required");
+        }
+        Coupon coupon = couponRepository.findByCode(code.trim().toUpperCase())
+                .orElseThrow(() -> new ResourceNotFoundException("Coupon introuvable"));
+
+        if (!coupon.isValid()) {
+            throw new IllegalStateException("Coupon expiré ou inactif");
+        }
+
+        if (coupon.getMinOrderAmount() != null
+                && orderAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
+            throw new IllegalStateException("Montant minimum non atteint");
+        }
+
+        if (coupon.getUsageLimitPerUser() != null) {
+            long used = couponUsageRepository.countByUserIdAndCouponId(user.getId(), coupon.getId());
+            if (used >= coupon.getUsageLimitPerUser()) {
+                throw new IllegalStateException("Limite d'utilisation atteinte");
+            }
+        }
+
+        if (Boolean.TRUE.equals(coupon.getIsFirstOrderOnly())) {
+            boolean hasUsages = !couponUsageRepository.findByUserId(user.getId()).isEmpty();
+            if (hasUsages) {
+                throw new IllegalStateException("Coupon réservé à la première commande");
+            }
+        }
+
+        return coupon;
+    }
+
+    public BigDecimal calculateDiscountFromCoupon(Coupon coupon, BigDecimal orderAmount) {
+        BigDecimal discount = switch (coupon.getType()) {
+            case PERCENTAGE -> orderAmount.multiply(coupon.getDiscountValue())
+                    .divide(BigDecimal.valueOf(100));
+            case FIXED_AMOUNT -> coupon.getDiscountValue();
+            default -> BigDecimal.ZERO;
+        };
+
+        if (coupon.getMaxDiscountAmount() != null
+                && discount.compareTo(coupon.getMaxDiscountAmount()) > 0) {
+            discount = coupon.getMaxDiscountAmount();
+        }
+
+        return discount;
     }
 
     @Transactional
@@ -68,34 +125,17 @@ public class CouponService {
 
     public BigDecimal calculateDiscount(String code, BigDecimal orderAmount) {
         Coupon coupon = getCouponByCode(code);
-        
+
         if (!coupon.isValid()) {
             throw new IllegalStateException("Coupon is not valid");
         }
-        
-        if (coupon.getMinOrderAmount() != null && 
-            orderAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
+
+        if (coupon.getMinOrderAmount() != null &&
+                orderAmount.compareTo(coupon.getMinOrderAmount()) < 0) {
             throw new IllegalStateException("Order amount is below minimum required");
         }
 
-        BigDecimal discount;
-        switch (coupon.getType()) {
-            case PERCENTAGE:
-                discount = orderAmount.multiply(coupon.getDiscountValue()).divide(BigDecimal.valueOf(100));
-                break;
-            case FIXED_AMOUNT:
-                discount = coupon.getDiscountValue();
-                break;
-            default:
-                discount = BigDecimal.ZERO;
-        }
-
-        if (coupon.getMaxDiscountAmount() != null && 
-            discount.compareTo(coupon.getMaxDiscountAmount()) > 0) {
-            discount = coupon.getMaxDiscountAmount();
-        }
-
-        return discount;
+        return calculateDiscountFromCoupon(coupon, orderAmount);
     }
 
     @Transactional
@@ -106,9 +146,30 @@ public class CouponService {
     }
 
     @Transactional
+    public void trackCouponUsage(Coupon coupon, User user, Order order,
+                                 BigDecimal discountAmount, BigDecimal orderAmount) {
+        int count = coupon.getUsageCount() != null ? coupon.getUsageCount() : 0;
+        coupon.setUsageCount(count + 1);
+        couponRepository.save(coupon);
+
+        couponUsageRepository.save(CouponUsage.builder()
+                .coupon(coupon)
+                .user(user)
+                .order(order)
+                .discountAmount(discountAmount)
+                .orderAmount(orderAmount)
+                .build());
+    }
+
+    @Transactional
     public void deleteCoupon(Long id) {
         Coupon coupon = getCouponById(id);
         coupon.setIsActive(false);
         couponRepository.save(coupon);
+    }
+
+    @Transactional
+    public void deactivateCouponById(Long couponId) {
+        deleteCoupon(couponId);
     }
 }

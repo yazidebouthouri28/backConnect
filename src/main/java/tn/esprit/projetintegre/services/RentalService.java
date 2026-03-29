@@ -11,6 +11,7 @@ import tn.esprit.projetintegre.dto.response.RentalProductResponse;
 import tn.esprit.projetintegre.entities.*;
 import tn.esprit.projetintegre.enums.RentalStatus;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.repositories.*;
 
 import java.math.BigDecimal;
@@ -28,6 +29,7 @@ public class RentalService {
     private final RentalProductRepository rentalProductRepository;
     private final UserRepository userRepository;
     private final SiteRepository siteRepository;
+
     private final ProductRepository productRepository;
 
     public List<RentalResponse> getAll() {
@@ -66,6 +68,7 @@ public class RentalService {
                     .orElseThrow(() -> new ResourceNotFoundException("Site", "id", request.getSiteId()));
             rental.setSite(site);
         }
+
         
         rental = rentalRepository.save(rental);
         

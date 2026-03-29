@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Product;
 import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.entities.Wishlist;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.ProductRepository;

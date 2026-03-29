@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Category;
 import tn.esprit.projetintegre.entities.Product;
 import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.CategoryRepository;
 import tn.esprit.projetintegre.repositories.ProductRepository;

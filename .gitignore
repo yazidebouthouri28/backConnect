@@ -1,17 +1,16 @@
-<<<<<<< Updated upstream
 HELP.md
-target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-=======
+
+# Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Root artifacts
 /index.html
 /final_complaint_verification_screenshot_1772316644627.webp
 /verify_swagger_ui_1772312673605.webp
 /testing_event_management_module_1772316025808.webp
->>>>>>> Stashed changes
 
 ### STS ###
 .apt_generated
@@ -23,7 +22,7 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
@@ -35,11 +34,60 @@ target/
 /nbdist/
 /.nb-gradle/
 build/
-<<<<<<< Updated upstream
 !**/src/main/**/build/
 !**/src/test/**/build/
-=======
->>>>>>> Stashed changes
 
 ### VS Code ###
 .vscode/
+
+# ----------------------
+# Java / Spring Boot
+# ----------------------
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+*.war
+*.ear
+
+# Eclipse / STS (additional patterns)
+*.classpath
+*.project
+*.settings/
+bin/
+
+# NetBeans (paths without leading slash)
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+.nb-gradle/
+
+# Maven release
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# Gradle
+.gradle/
+
+# Others
+.DS_Store
+*.swp
+*.swo

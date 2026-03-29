@@ -16,6 +16,9 @@ import tn.esprit.projetintegre.dto.UserDTO;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.enums.Role;
 import tn.esprit.projetintegre.services.UserService;
+import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.enums.Role;
+import tn.esprit.projetintegre.services.UserService;
 
 import java.util.List;
 import java.util.stream.Collectors;

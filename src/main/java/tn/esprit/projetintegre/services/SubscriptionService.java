@@ -12,6 +12,7 @@ import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.SubscriptionRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,6 +23,8 @@ public class SubscriptionService {
 
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
+    private final WalletService walletService;
+    private final InvoiceService invoiceService;
 
     public List<Subscription> getAllSubscriptions() {
         return subscriptionRepository.findAll();
@@ -47,20 +50,17 @@ public class SubscriptionService {
     public List<Subscription> getSubscriptionsByStatus(SubscriptionStatus status) {
         return subscriptionRepository.findByStatus(status);
     }
-    // Dans SubscriptionService.java
+
     public Subscription updateSubscription(Subscription subscription) {
         return subscriptionRepository.save(subscription);
     }
 
-    // Ou avec un ID explicite
     public Subscription updateSubscription(Long id, Subscription subscriptionDetails) {
         Subscription subscription = getSubscriptionById(id);
-        // Copier les propriétés
         subscription.setPlanName(subscriptionDetails.getPlanName());
         subscription.setPlanType(subscriptionDetails.getPlanType());
         subscription.setPrice(subscriptionDetails.getPrice());
         subscription.setAutoRenew(subscriptionDetails.getAutoRenew());
-        // Ajouter d'autres champs si nécessaire
 
         return subscriptionRepository.save(subscription);
     }
@@ -78,6 +78,28 @@ public class SubscriptionService {
         return subscriptionRepository.save(subscription);
     }
 
+    /**
+     * Charge wallet, create subscription and invoice (integrated checkout flow).
+     */
+    public Subscription subscribeWithWalletPayment(User user, String planName,
+                                                   BigDecimal price, int durationDays) {
+        walletService.withdraw(user.getId(), price, "Abonnement " + planName);
+
+        Subscription sub = subscriptionRepository.save(Subscription.builder()
+                .user(user)
+                .planName(planName)
+                .price(price)
+                .status(SubscriptionStatus.ACTIVE)
+                .startDate(LocalDateTime.now())
+                .endDate(LocalDateTime.now().plusDays(durationDays))
+                .renewalDate(LocalDateTime.now().plusDays(durationDays))
+                .autoRenew(true)
+                .build());
+
+        invoiceService.generateFromSubscription(sub);
+        return sub;
+    }
+
     public Subscription activateSubscription(Long id) {
         Subscription subscription = getSubscriptionById(id);
         subscription.setStatus(SubscriptionStatus.ACTIVE);
@@ -87,6 +109,7 @@ public class SubscriptionService {
     public Subscription cancelSubscription(Long id) {
         Subscription subscription = getSubscriptionById(id);
         subscription.setStatus(SubscriptionStatus.CANCELLED);
+        subscription.setAutoRenew(false);
         return subscriptionRepository.save(subscription);
     }
 
@@ -101,6 +124,26 @@ public class SubscriptionService {
         subscription.setEndDate(subscription.getEndDate().plusMonths(months));
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         return subscriptionRepository.save(subscription);
+    }
+
+    public void processSubscriptionRenewals() {
+        List<Subscription> toRenew = subscriptionRepository
+                .findByAutoRenewTrueAndRenewalDateBefore(LocalDateTime.now());
+
+        toRenew.forEach(sub -> {
+            try {
+                walletService.withdraw(sub.getUser().getId(), sub.getPrice(),
+                        "Renouvellement " + sub.getPlanName());
+                sub.setStartDate(LocalDateTime.now());
+                sub.setEndDate(LocalDateTime.now().plusDays(30));
+                sub.setRenewalDate(LocalDateTime.now().plusDays(30));
+                subscriptionRepository.save(sub);
+                invoiceService.generateFromSubscription(sub);
+            } catch (Exception e) {
+                sub.setStatus(SubscriptionStatus.EXPIRED);
+                subscriptionRepository.save(sub);
+            }
+        });
     }
 
     public void deleteSubscription(Long id) {

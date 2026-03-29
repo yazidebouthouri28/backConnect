@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import tn.esprit.projetintegre.enums.CertificationStatus;
+import tn.esprit.projetintegre.entities.User;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

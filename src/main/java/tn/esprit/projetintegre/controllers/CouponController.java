@@ -12,6 +12,7 @@ import tn.esprit.projetintegre.dto.ApiResponse;
 import tn.esprit.projetintegre.dto.request.CouponRequest;
 import tn.esprit.projetintegre.dto.response.CouponResponse;
 import tn.esprit.projetintegre.entities.Coupon;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.mapper.DtoMapper;
 import tn.esprit.projetintegre.services.CouponService;
 
@@ -79,6 +80,16 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success("Coupon is valid", result));
     }
 
+    @PostMapping("/validate-with-user")
+    @Operation(summary = "Validate coupon for a user and cart rules (per-user limits)")
+    public ResponseEntity<ApiResponse<CouponResponse>> validateCouponWithUser(
+            @RequestParam String code,
+            @RequestBody User user,
+            @RequestParam BigDecimal orderAmount) {
+        Coupon coupon = couponService.validateForUser(code, user, orderAmount);
+        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toCouponResponse(coupon)));
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a coupon (Admin only)")
@@ -106,20 +117,28 @@ public class CouponController {
         couponService.deleteCoupon(id);
         return ResponseEntity.ok(ApiResponse.success("Coupon deleted", null));
     }
+
+    @PostMapping("/{id}/soft-deactivate")
+    @Operation(summary = "Deactivate coupon (flag only)")
+    public ResponseEntity<ApiResponse<Void>> softDeactivate(@PathVariable Long id) {
+        couponService.deactivateCouponById(id);
+        return ResponseEntity.ok(ApiResponse.success("Coupon deactivated", null));
+    }
+
     private Coupon toEntity(CouponRequest request) {
         return Coupon.builder()
                 .code(request.getCode())
                 .description(request.getDescription())
-                .type(request.getType()) // Corrigé
+                .type(request.getType())
                 .discountValue(request.getDiscountValue())
-                .minOrderAmount(request.getMinOrderAmount()) // Corrigé
+                .minOrderAmount(request.getMinOrderAmount())
                 .maxDiscountAmount(request.getMaxDiscountAmount())
-                .usageLimit(request.getUsageLimit()) // Corrigé
-                .usageLimitPerUser(request.getUsageLimitPerUser()) // Corrigé
+                .usageLimit(request.getUsageLimit())
+                .usageLimitPerUser(request.getUsageLimitPerUser())
                 .isActive(request.getIsActive())
-                .isFirstOrderOnly(request.getIsFirstOrderOnly()) // Ajouté
-                .validFrom(request.getValidFrom()) // Corrigé
-                .validUntil(request.getValidUntil()) // Corrigé
+                .isFirstOrderOnly(request.getIsFirstOrderOnly())
+                .validFrom(request.getValidFrom())
+                .validUntil(request.getValidUntil())
                 .build();
     }
 }

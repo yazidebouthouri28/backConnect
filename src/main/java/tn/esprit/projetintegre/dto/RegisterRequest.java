@@ -3,6 +3,13 @@ package tn.esprit.projetintegre.dto;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import tn.esprit.projetintegre.enums.Role;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

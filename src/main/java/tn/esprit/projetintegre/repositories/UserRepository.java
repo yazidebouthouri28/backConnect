@@ -9,6 +9,11 @@ import org.springframework.stereotype.Repository;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.enums.Role;
 import tn.esprit.projetintegre.enums.SponsorStatus;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import tn.esprit.projetintegre.entities.User;
+import tn.esprit.projetintegre.enums.Role;
 
 import java.util.List;
 import java.util.Optional;

@@ -87,44 +87,4 @@ public class Review {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
-
-    public ReviewTargetType getTargetType() {
-        return targetType;
-    }
-
-    public void setTargetType(ReviewTargetType targetType) {
-        this.targetType = targetType;
-    }
-
-    public Long getTargetId() {
-        return targetId;
-    }
-
-    public void setTargetId(Long targetId) {
-        this.targetId = targetId;
-    }
-
-    public Integer getRating() {
-        return rating;
-    }
-
-    public void setRating(Integer rating) {
-        this.rating = rating;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
 }

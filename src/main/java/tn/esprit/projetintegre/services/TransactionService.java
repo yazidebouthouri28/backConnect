@@ -14,6 +14,7 @@ import tn.esprit.projetintegre.repositories.TransactionRepository;
 import tn.esprit.projetintegre.repositories.WalletRepository;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,25 +50,36 @@ public class TransactionService {
         return transactionRepository.findByType(type, pageable);
     }
 
+    public List<Transaction> getTransactionsByWalletIdList(Long walletId) {
+        return transactionRepository.findByWalletIdOrderByCreatedAtDesc(walletId);
+    }
+
+    public List<Transaction> getTransactionsByUserIdList(Long userId) {
+        return transactionRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+    }
+
+    public List<Transaction> getPendingTransactions() {
+        return transactionRepository.findByStatus(PaymentStatus.PENDING);
+    }
+
     public Transaction createTransaction(Transaction transaction, Long walletId) {
         Wallet wallet = walletRepository.findById(walletId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found with id: " + walletId));
 
-        BigDecimal balanceBefore = wallet.getBalance();
+        BigDecimal current = wallet.getBalance() != null ? wallet.getBalance() : BigDecimal.ZERO;
         transaction.setWallet(wallet);
         transaction.setUser(wallet.getUser());
-        transaction.setBalanceBefore(balanceBefore);
+        transaction.setBalanceBefore(current);
         transaction.setStatus(PaymentStatus.COMPLETED);
 
-        // Update wallet balance based on transaction type
-        if (transaction.getType() == TransactionType.DEPOSIT || 
-            transaction.getType() == TransactionType.REFUND) {
-            wallet.setBalance(wallet.getBalance().add(transaction.getAmount()));
+        if (transaction.getType() == TransactionType.DEPOSIT ||
+                transaction.getType() == TransactionType.REFUND) {
+            wallet.setBalance(current.add(transaction.getAmount()));
         } else {
-            if (wallet.getBalance().compareTo(transaction.getAmount()) < 0) {
+            if (current.compareTo(transaction.getAmount()) < 0) {
                 throw new IllegalStateException("Insufficient balance");
             }
-            wallet.setBalance(wallet.getBalance().subtract(transaction.getAmount()));
+            wallet.setBalance(current.subtract(transaction.getAmount()));
         }
 
         transaction.setBalanceAfter(wallet.getBalance());

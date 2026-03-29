@@ -6,7 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.projetintegre.dto.ApiResponse;
+import tn.esprit.projetintegre.dto.response.TransactionResponse;
 import tn.esprit.projetintegre.dto.response.WalletResponse;
+import tn.esprit.projetintegre.entities.Transaction;
 import tn.esprit.projetintegre.entities.Wallet;
 import tn.esprit.projetintegre.mapper.DtoMapper;
 import tn.esprit.projetintegre.services.WalletService;
@@ -80,5 +82,25 @@ public class WalletController {
     public ResponseEntity<ApiResponse<WalletResponse>> activateWallet(@PathVariable Long userId) {
         Wallet wallet = walletService.activateWallet(userId);
         return ResponseEntity.ok(ApiResponse.success("Wallet activated successfully", dtoMapper.toWalletResponse(wallet)));
+    }
+
+    @PostMapping("/user/{userId}/deposit")
+    @Operation(summary = "Deposit with ledger transaction record")
+    public ResponseEntity<ApiResponse<TransactionResponse>> depositWithLedger(
+            @PathVariable Long userId,
+            @RequestParam BigDecimal amount,
+            @RequestParam String description) {
+        Transaction tx = walletService.deposit(userId, amount, description);
+        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toTransactionResponse(tx)));
+    }
+
+    @PostMapping("/user/{userId}/withdraw")
+    @Operation(summary = "Withdraw with ledger transaction record")
+    public ResponseEntity<ApiResponse<TransactionResponse>> withdrawWithLedger(
+            @PathVariable Long userId,
+            @RequestParam BigDecimal amount,
+            @RequestParam String description) {
+        Transaction tx = walletService.withdraw(userId, amount, description);
+        return ResponseEntity.ok(ApiResponse.success(dtoMapper.toTransactionResponse(tx)));
     }
 }

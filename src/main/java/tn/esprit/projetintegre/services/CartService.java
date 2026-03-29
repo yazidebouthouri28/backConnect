@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.projetintegre.entities.Cart;
 import tn.esprit.projetintegre.entities.CartItem;
+import tn.esprit.projetintegre.entities.Coupon;
 import tn.esprit.projetintegre.entities.Product;
+import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
 import tn.esprit.projetintegre.repositories.CartItemRepository;
 import tn.esprit.projetintegre.repositories.CartRepository;
@@ -21,10 +23,17 @@ public class CartService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
+    private final CouponService couponService;
 
     public Cart getCartByUserId(Long userId) {
         return cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart not found for user: " + userId));
+    }
+
+    public Cart getOrCreateCart(User user) {
+        return cartRepository.findByUserId(user.getId())
+                .orElseGet(() -> cartRepository.save(
+                        Cart.builder().user(user).build()));
     }
 
     @Transactional
@@ -50,6 +59,25 @@ public class CartService {
             cartItemRepository.save(newItem);
         }
 
+        cart.calculateTotal();
+        return cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Cart addItem(User user, Product product, Integer quantity) {
+        Cart cart = getOrCreateCart(user);
+
+        CartItem item = cartItemRepository
+                .findByCartIdAndProductId(cart.getId(), product.getId())
+                .orElse(CartItem.builder()
+                        .cart(cart)
+                        .product(product)
+                        .quantity(0)
+                        .price(product.getPrice())
+                        .build());
+
+        item.setQuantity(item.getQuantity() + quantity);
+        cartItemRepository.save(item);
         cart.calculateTotal();
         return cartRepository.save(cart);
     }
@@ -82,6 +110,29 @@ public class CartService {
         cartItemRepository.delete(item);
 
         cart.calculateTotal();
+        return cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Cart removeItemByCartId(Long cartId, Long itemId) {
+        cartItemRepository.deleteById(itemId);
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new ResourceNotFoundException("Panier introuvable"));
+        cart.calculateTotal();
+        return cartRepository.save(cart);
+    }
+
+    @Transactional
+    public Cart applyCouponToCart(Long userId, String code) {
+        Cart cart = cartRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Panier introuvable"));
+        User user = cart.getUser();
+
+        Coupon coupon = couponService.validateForUser(code, user, cart.getTotalAmount());
+        BigDecimal discount = couponService.calculateDiscountFromCoupon(coupon, cart.getTotalAmount());
+
+        cart.setDiscountAmount(discount);
+        cart.setAppliedCouponCode(code);
         return cartRepository.save(cart);
     }
 
