@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GITHUB_REPO  = 'https://github.com/yazidebouthouri28/Esprit-PI-4SE3-2025-2026-ConnectCamp-Backend.git'
-        DOCKER_IMAGE = 'yazidebouthouri28/connectcamp-backend'
+        DOCKER_IMAGE = 'yazidebouthouri/connectcamp-backend'
         DOCKER_TAG   = "${BUILD_NUMBER}"
     }
 
