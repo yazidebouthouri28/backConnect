@@ -1,5 +1,6 @@
 package tn.esprit.productservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -10,20 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Product entity - migrated from monolith.
- * Changes from monolith:
- * - ID changed from Long to UUID for distributed uniqueness
- * - Removed User/seller entity reference, replaced with sellerId (UUID)
- * - Category remains as a local relationship within Product Service
- */
 @Entity
 @Table(name = "products", indexes = {
-    @Index(name = "idx_product_category", columnList = "category_id"),
-    @Index(name = "idx_product_seller", columnList = "seller_id"),
-    @Index(name = "idx_product_active", columnList = "is_active"),
-    @Index(name = "idx_product_price", columnList = "price"),
-    @Index(name = "idx_product_sku", columnList = "sku")
+        @Index(name = "idx_product_category", columnList = "category_id"),
+        @Index(name = "idx_product_seller",   columnList = "seller_id"),
+        @Index(name = "idx_product_active",   columnList = "is_active"),
+        @Index(name = "idx_product_price",    columnList = "price"),
+        @Index(name = "idx_product_sku",      columnList = "sku")
 })
 @Getter
 @Setter
@@ -38,21 +32,21 @@ public class Product {
     private UUID id;
 
     @NotBlank(message = "Le nom du produit est obligatoire")
-    @Size(min = 2, max = 200, message = "Le nom doit contenir entre 2 et 200 caractères")
+    @Size(min = 2, max = 200)
     @Column(nullable = false)
     private String name;
 
     @Column(length = 2000)
-    @Size(max = 2000, message = "La description ne peut pas dépasser 2000 caractères")
+    @Size(max = 2000)
     private String description;
 
     @NotNull(message = "Le prix est obligatoire")
-    @DecimalMin(value = "0.01", message = "Le prix doit être supérieur à 0")
-    @DecimalMax(value = "9999999.99", message = "Le prix ne peut pas dépasser 9 999 999,99")
+    @DecimalMin(value = "0.01")
+    @DecimalMax(value = "9999999.99")
     @Column(precision = 15, scale = 2, nullable = false)
     private BigDecimal price;
 
-    @DecimalMin(value = "0.00", message = "Le prix original ne peut pas être négatif")
+    @DecimalMin(value = "0.00")
     @Column(precision = 15, scale = 2)
     private BigDecimal originalPrice;
 
@@ -73,9 +67,9 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
+    @JsonIgnoreProperties({"subcategories", "products", "parent", "hibernateLazyInitializer", "handler"})
     private Category category;
 
-    /** Seller ID from User Service - no direct entity reference in microservice */
     @Column(name = "seller_id")
     private UUID sellerId;
 
@@ -94,7 +88,8 @@ public class Product {
     @Builder.Default
     private Boolean trackInventory = true;
 
-    @ElementCollection
+    // FIX: EAGER - @ElementCollection is lazy by default
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
     @Builder.Default
@@ -144,14 +139,18 @@ public class Product {
     @Size(max = 100)
     private String dimensions;
 
-    @ElementCollection
+    // FIX: EAGER - @ElementCollection is lazy by default
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "tag")
     @Builder.Default
     private List<String> tags = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    // FIX: EAGER - reviews are serialized by ReviewController via the mapper,
+    // so they must be loaded. @JsonIgnoreProperties breaks the circular loop.
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnoreProperties({"product", "hibernateLazyInitializer", "handler"})
     private List<ProductReview> reviews = new ArrayList<>();
 
     @Column(updatable = false)
@@ -163,11 +162,11 @@ public class Product {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
         if (stockQuantity == null) stockQuantity = 0;
-        if (reviewCount == null) reviewCount = 0;
-        if (salesCount == null) salesCount = 0;
-        if (viewCount == null) viewCount = 0;
-        if (rating == null) rating = BigDecimal.ZERO;
-        if (isActive == null) isActive = true;
+        if (reviewCount == null)   reviewCount = 0;
+        if (salesCount == null)    salesCount = 0;
+        if (viewCount == null)     viewCount = 0;
+        if (rating == null)        rating = BigDecimal.ZERO;
+        if (isActive == null)      isActive = true;
     }
 
     @PreUpdate

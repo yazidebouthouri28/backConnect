@@ -7,7 +7,6 @@ import java.util.UUID;
 
 /**
  * DTO representing product data fetched from Product Service via WebClient.
- * Used for cart operations and order creation to get current product info.
  */
 @Data
 @Builder

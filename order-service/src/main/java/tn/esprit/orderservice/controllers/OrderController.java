@@ -22,11 +22,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Order REST Controller - migrated from monolith.
- * Authentication handled by API Gateway.
- * User info from X-User-Id, X-User-Email headers.
- */
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
@@ -40,7 +35,9 @@ public class OrderController {
     @Operation(summary = "Get all orders (Admin only)")
     public ResponseEntity<ApiResponse<List<OrderResponse>>> getAllOrders() {
         List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(ApiResponse.success(mapper.toOrderResponseList(orders)));
+        // Mapper les entités vers DTO
+        List<OrderResponse> dtoList = mapper.toOrderResponseList(orders);
+        return ResponseEntity.ok(ApiResponse.success(dtoList));
     }
 
     @GetMapping("/user/{userId}")
@@ -50,8 +47,9 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<Order> orders = orderService.getOrdersByUser(userId, PageRequest.of(page, size));
-        Page<OrderResponse> response = orders.map(mapper::toOrderResponse);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+        // Mapper les entités vers DTO
+        Page<OrderResponse> dtoPage = orders.map(mapper::toOrderResponse);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(dtoPage)));
     }
 
     @GetMapping("/my-orders")
@@ -62,8 +60,8 @@ public class OrderController {
             @RequestParam(defaultValue = "10") int size) {
         UUID userId = UUID.fromString(userIdHeader);
         Page<Order> orders = orderService.getOrdersByUser(userId, PageRequest.of(page, size));
-        Page<OrderResponse> response = orders.map(mapper::toOrderResponse);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+        Page<OrderResponse> dtoPage = orders.map(mapper::toOrderResponse);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(dtoPage)));
     }
 
     @GetMapping("/status/{status}")
@@ -73,22 +71,24 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Page<Order> orders = orderService.getOrdersByStatus(status, PageRequest.of(page, size));
-        Page<OrderResponse> response = orders.map(mapper::toOrderResponse);
-        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
+        Page<OrderResponse> dtoPage = orders.map(mapper::toOrderResponse);
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(dtoPage)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get order by ID")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderById(@PathVariable UUID id) {
         Order order = orderService.getOrderById(id);
-        return ResponseEntity.ok(ApiResponse.success(mapper.toOrderResponse(order)));
+        OrderResponse dto = mapper.toOrderResponse(order);
+        return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
     @GetMapping("/number/{orderNumber}")
     @Operation(summary = "Get order by number")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrderByNumber(@PathVariable String orderNumber) {
         Order order = orderService.getOrderByNumber(orderNumber);
-        return ResponseEntity.ok(ApiResponse.success(mapper.toOrderResponse(order)));
+        OrderResponse dto = mapper.toOrderResponse(order);
+        return ResponseEntity.ok(ApiResponse.success(dto));
     }
 
     @PostMapping
@@ -98,22 +98,23 @@ public class OrderController {
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Email", required = false) String userEmailHeader,
             @RequestParam(required = false) UUID userId) {
-        // Use userId from header (gateway) or request param
-        UUID resolvedUserId = userIdHeader != null ? UUID.fromString(userIdHeader) : userId;
-        String userEmail = userEmailHeader;
 
+        UUID resolvedUserId = userIdHeader != null ? UUID.fromString(userIdHeader) : userId;
         if (resolvedUserId == null) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("User ID is required"));
         }
 
         Order order = orderService.createOrderFromCart(
-                resolvedUserId, userEmail,
+                resolvedUserId, userEmailHeader,
                 request.getShippingName(), request.getShippingPhone(),
                 request.getShippingAddress(), request.getShippingCity(),
                 request.getShippingPostalCode(), request.getShippingCountry(),
-                request.getPaymentMethod(), request.getNotes());
-        return ResponseEntity.ok(ApiResponse.success("Order created successfully", mapper.toOrderResponse(order)));
+                request.getPaymentMethod(), request.getNotes()
+        );
+
+        OrderResponse dto = mapper.toOrderResponse(order);
+        return ResponseEntity.ok(ApiResponse.success("Order created successfully", dto));
     }
 
     @PatchMapping("/{id}/status")
@@ -121,8 +122,10 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable UUID id,
             @RequestParam OrderStatus status) {
+
         Order order = orderService.updateOrderStatus(id, status);
-        return ResponseEntity.ok(ApiResponse.success("Order status updated", mapper.toOrderResponse(order)));
+        OrderResponse dto = mapper.toOrderResponse(order);
+        return ResponseEntity.ok(ApiResponse.success("Order status updated", dto));
     }
 
     @PatchMapping("/{id}/payment")
@@ -131,13 +134,16 @@ public class OrderController {
             @PathVariable UUID id,
             @RequestParam PaymentStatus status,
             @RequestParam(required = false) String transactionId) {
+
         Order order = orderService.updatePaymentStatus(id, status, transactionId);
-        return ResponseEntity.ok(ApiResponse.success("Payment status updated", mapper.toOrderResponse(order)));
+        OrderResponse dto = mapper.toOrderResponse(order);
+        return ResponseEntity.ok(ApiResponse.success("Payment status updated", dto));
     }
 
     @GetMapping("/revenue")
     @Operation(summary = "Get total revenue (Admin only)")
     public ResponseEntity<ApiResponse<BigDecimal>> getTotalRevenue() {
-        return ResponseEntity.ok(ApiResponse.success(orderService.getTotalRevenue()));
+        BigDecimal revenue = orderService.getTotalRevenue();
+        return ResponseEntity.ok(ApiResponse.success(revenue));
     }
 }

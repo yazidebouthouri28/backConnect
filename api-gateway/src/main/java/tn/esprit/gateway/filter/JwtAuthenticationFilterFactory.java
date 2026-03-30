@@ -39,7 +39,8 @@ public class JwtAuthenticationFilterFactory
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
             "/api/auth/register",
-            "/api/auth/refresh"
+            "/api/auth/refresh",
+            "/api/auth/health"
     );
 
     @Value("${jwt.secret}")
@@ -78,17 +79,24 @@ public class JwtAuthenticationFilterFactory
                 // Validate and parse JWT
                 Claims claims = validateToken(token);
 
+                // Extract user info from claims
+                String userId = claims.getSubject();
+                String email = claims.get("email", String.class);
+                String role = claims.get("role", String.class);
+                String name = claims.get("name", String.class);
+                String username = claims.get("username", String.class);
+
                 // Add user context headers for downstream services
                 ServerHttpRequest modifiedRequest = request.mutate()
-                        .header("X-User-Id", claims.getSubject())
-                        .header("X-User-Email", claims.get("email", String.class))
-                        .header("X-User-Role", claims.get("role", String.class))
-                        .header("X-User-Name", claims.get("name", String.class) != null
-                                ? claims.get("name", String.class) : "")
+                        .header("X-User-Id", userId != null ? userId : "")
+                        .header("X-User-Email", email != null ? email : "")
+                        .header("X-User-Role", role != null ? role : "")
+                        .header("X-User-Name", name != null ? name : "")
+                        .header("X-User-Username", username != null ? username : "")
                         .build();
 
-                log.debug("JWT validated for user: {} (role: {})",
-                        claims.getSubject(), claims.get("role"));
+                log.debug("JWT validated for user: {} (role: {}, email: {})",
+                        userId, role, email);
 
                 return chain.filter(exchange.mutate().request(modifiedRequest).build());
 
@@ -116,7 +124,9 @@ public class JwtAuthenticationFilterFactory
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);
         response.getHeaders().add("Content-Type", "application/json");
-        String body = String.format("{\"error\": \"%s\", \"status\": %d}", message, status.value());
+        String body = String.format(
+                "{\"success\": false, \"error\": \"%s\", \"status\": %d}",
+                message, status.value());
         return response.writeWith(
                 Mono.just(response.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8)))
         );

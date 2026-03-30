@@ -1,5 +1,6 @@
 package tn.esprit.productservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -9,10 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Category entity - migrated from monolith.
- * Changes: ID changed from Long to UUID.
- */
 @Entity
 @Table(name = "categories")
 @Getter
@@ -20,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Category {
 
     @Id
@@ -43,16 +41,25 @@ public class Category {
     @Builder.Default
     private Integer displayOrder = 0;
 
-    @ManyToOne
+    // LAZY is fine for parent — it's a single object, and we guard it
+    // in the mapper with Hibernate.isInitialized()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
+    @JsonIgnoreProperties({"subcategories", "products", "parent", "hibernateLazyInitializer", "handler"})
     private Category parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    // FIX: EAGER — Jackson serializes this list; it must be loaded in-session
+    // @JsonIgnoreProperties breaks the infinite parent→subcategory→parent loop
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnoreProperties({"parent", "products", "subcategories", "hibernateLazyInitializer", "handler"})
     private List<Category> subcategories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    // FIX: EAGER — needed when CategoryResponse.productCount calls .size()
+    // @JsonIgnoreProperties breaks the Category→Product→Category loop
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @Builder.Default
+    @JsonIgnoreProperties({"category", "reviews", "images", "tags", "hibernateLazyInitializer", "handler"})
     private List<Product> products = new ArrayList<>();
 
     private LocalDateTime createdAt;

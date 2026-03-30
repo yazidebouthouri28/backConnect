@@ -1,39 +1,15 @@
-version: '3.8'
-
 services:
   # ============================================================
   # DATABASES
   # ============================================================
-  user-db:
-    image: mysql:8.0
-    container_name: ecommerce-user-db
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: user_db
-      MYSQL_USER: userservice
-      MYSQL_PASSWORD: userservice123
-    ports:
-      - "3306:3306"
-    volumes:
-      - user_db_data:/var/lib/mysql
-    networks:
-      - ecommerce-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   product-db:
     image: mysql:8.0
     container_name: ecommerce-product-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: product_db
-      MYSQL_USER: productservice
-      MYSQL_PASSWORD: productservice123
     ports:
       - "3307:3306"
     volumes:
@@ -41,20 +17,20 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
 
   order-db:
     image: mysql:8.0
     container_name: ecommerce-order-db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: ""
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: order_db
-      MYSQL_USER: orderservice
-      MYSQL_PASSWORD: orderservice123
     ports:
       - "3308:3306"
     volumes:
@@ -62,10 +38,11 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 120s
 
   # ============================================================
   # REDIS
@@ -86,6 +63,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
 
   # ============================================================
   # KAFKA + ZOOKEEPER
@@ -105,10 +83,11 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: echo ruok | nc localhost 2181 | grep imok
+      test: ["CMD", "bash", "-c", "echo srvr | nc localhost 2181 | grep Mode"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+      start_period: 30s
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -132,10 +111,11 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: kafka-broker-api-versions --bootstrap-server localhost:9092
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
       interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
   kafka-init:
     image: confluentinc/cp-kafka:7.5.0
@@ -144,20 +124,18 @@ services:
       kafka:
         condition: service_healthy
     entrypoint: /bin/sh -c
-    command: |
-      "
-      echo 'Creating Kafka topics...'
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.created
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.updated
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.deleted
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.created
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.completed
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.cancelled
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic inventory.low-stock
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic user.registered
-      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic payment.processed
-      echo 'Kafka topics created successfully!'
-      "
+    command:
+      - |
+        echo 'Creating Kafka topics...'
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.created
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.updated
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.deleted
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.created
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.completed
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.cancelled
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic inventory.low-stock
+        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic payment.processed
+        echo 'Kafka topics created successfully!'
     networks:
       - ecommerce-network
 
@@ -196,13 +174,12 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
       - JWT_SECRET=YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!
-      - USER_SERVICE_URL=http://user-service:8081
       - PRODUCT_SERVICE_URL=http://product-service:8082
       - ORDER_SERVICE_URL=http://order-service:8083
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     ports:
-      - "8080:8080"
+      - "8090:8080"
     depends_on:
       redis:
         condition: service_healthy
@@ -212,35 +189,6 @@ services:
   # ============================================================
   # MICROSERVICES
   # ============================================================
-  user-service:
-    build:
-      context: ./user-service
-      dockerfile: Dockerfile
-    container_name: ecommerce-user-service
-    restart: unless-stopped
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - DB_HOST=user-db
-      - DB_PORT=3306
-      - DB_NAME=user_db
-      - DB_USERNAME=userservice
-      - DB_PASSWORD=userservice123
-      - JWT_SECRET=YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    ports:
-      - "8081:8081"
-    depends_on:
-      user-db:
-        condition: service_healthy
-      kafka:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - ecommerce-network
-
   product-service:
     build:
       context: ./product-service
@@ -252,8 +200,8 @@ services:
       - DB_HOST=product-db
       - DB_PORT=3306
       - DB_NAME=product_db
-      - DB_USERNAME=productservice
-      - DB_PASSWORD=productservice123
+      - DB_USERNAME=root
+      - DB_PASSWORD=
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -280,8 +228,8 @@ services:
       - DB_HOST=order-db
       - DB_PORT=3306
       - DB_NAME=order_db
-      - DB_USERNAME=orderservice
-      - DB_PASSWORD=orderservice123
+      - DB_USERNAME=root
+      - DB_PASSWORD=
       - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
       - REDIS_HOST=redis
       - REDIS_PORT=6379
@@ -310,8 +258,6 @@ networks:
 # VOLUMES
 # ============================================================
 volumes:
-  user_db_data:
-    name: ecommerce-user-db-data
   product_db_data:
     name: ecommerce-product-db-data
   order_db_data:

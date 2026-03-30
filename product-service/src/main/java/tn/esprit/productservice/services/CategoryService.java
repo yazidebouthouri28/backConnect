@@ -15,11 +15,12 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Category Service - migrated from monolith.
- * 
- * Redis Caching Strategy:
- * - "categories" cache: All category listings (TTL: 1 hour)
- * - Cache evicted on create/update/delete
+ * Category Service
+ *
+ * FIX: Every read method is annotated @Transactional(readOnly = true).
+ * This keeps the Hibernate session open until the method returns, so lazy
+ * proxies (parent, products, subcategories) can be safely accessed by the
+ * mapper WITHIN the same call stack.
  */
 @Slf4j
 @Service
@@ -69,12 +70,10 @@ public class CategoryService {
         if (categoryRepository.existsByName(category.getName())) {
             throw new DuplicateResourceException("Category with this name already exists");
         }
-
         if (parentId != null) {
             Category parent = getCategoryById(parentId);
             category.setParent(parent);
         }
-
         Category saved = categoryRepository.save(category);
         log.info("Category created: {} ({})", saved.getName(), saved.getId());
         return saved;
@@ -84,7 +83,6 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     public Category updateCategory(UUID id, Category categoryDetails) {
         Category category = getCategoryById(id);
-
         if (categoryDetails.getName() != null) {
             if (!category.getName().equals(categoryDetails.getName()) &&
                     categoryRepository.existsByName(categoryDetails.getName())) {
@@ -96,7 +94,6 @@ public class CategoryService {
         if (categoryDetails.getImage() != null) category.setImage(categoryDetails.getImage());
         if (categoryDetails.getDisplayOrder() != null) category.setDisplayOrder(categoryDetails.getDisplayOrder());
         if (categoryDetails.getIsActive() != null) category.setIsActive(categoryDetails.getIsActive());
-
         return categoryRepository.save(category);
     }
 

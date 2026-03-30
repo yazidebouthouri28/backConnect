@@ -1,5 +1,6 @@
 package tn.esprit.orderservice.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 import tn.esprit.orderservice.enums.OrderStatus;
 import tn.esprit.orderservice.enums.PaymentStatus;
@@ -34,8 +35,16 @@ public class OrderResponse {
     private String shippingPhone;
     private String trackingNumber;
     private String notes;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime orderedAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime deliveredAt;
 }

@@ -1,5 +1,7 @@
 package tn.esprit.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,15 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Cart entity - migrated from monolith.
- * Changes:
- * - ID changed from Long to UUID
- * - Removed User entity reference, replaced with userId (UUID)
- */
 @Entity
 @Table(name = "carts", indexes = {
-    @Index(name = "idx_cart_user", columnList = "user_id")
+        @Index(name = "idx_cart_user", columnList = "user_id")
 })
 @Getter
 @Setter
@@ -31,7 +27,6 @@ public class Cart {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
-    /** User ID from User Service */
     @Column(name = "user_id", unique = true)
     private UUID userId;
 
@@ -48,8 +43,11 @@ public class Cart {
     private BigDecimal discountAmount = BigDecimal.ZERO;
 
     private String appliedCouponCode;
-
+    @JsonIgnore
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+    @JsonIgnore
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -63,9 +61,6 @@ public class Cart {
         updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * Recalculate the total amount based on cart items.
-     */
     public void calculateTotal() {
         this.totalAmount = items.stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))

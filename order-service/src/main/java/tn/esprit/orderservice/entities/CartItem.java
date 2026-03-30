@@ -1,5 +1,7 @@
 package tn.esprit.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -7,17 +9,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * CartItem entity - migrated from monolith.
- * Changes:
- * - ID changed from Long to UUID
- * - Removed Product entity reference, replaced with productId (UUID)
- * - Product data is denormalized for display without cross-service calls
- */
 @Entity
 @Table(name = "cart_items", indexes = {
-    @Index(name = "idx_cartitem_cart", columnList = "cart_id"),
-    @Index(name = "idx_cartitem_product", columnList = "product_id")
+        @Index(name = "idx_cartitem_cart", columnList = "cart_id"),
+        @Index(name = "idx_cartitem_product", columnList = "product_id")
 })
 @Getter
 @Setter
@@ -33,16 +28,13 @@ public class CartItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id")
+    @JsonIgnore
     private Cart cart;
 
-    /** Product ID from Product Service */
     @Column(name = "product_id")
     private UUID productId;
 
-    /** Denormalized product name for display */
     private String productName;
-
-    /** Denormalized product thumbnail for display */
     private String productThumbnail;
 
     @Builder.Default
@@ -54,7 +46,8 @@ public class CartItem {
     private String selectedVariant;
     private String selectedColor;
     private String selectedSize;
-
+    @JsonIgnore  // Add this
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime addedAt;
 
     @PrePersist

@@ -2,6 +2,7 @@ package tn.esprit.orderservice.repositories;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,10 +18,19 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
+    @EntityGraph(attributePaths = {"items"})
+    List<Order> findAll();
+
+    @EntityGraph(attributePaths = {"items"})
+    Optional<Order> findById(UUID id);
+
+    @EntityGraph(attributePaths = {"items"})
     Optional<Order> findByOrderNumber(String orderNumber);
 
+    @EntityGraph(attributePaths = {"items"})
     Page<Order> findByUserId(UUID userId, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"items"})
     Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
     List<Order> findByUserIdAndStatus(UUID userId, OrderStatus status);

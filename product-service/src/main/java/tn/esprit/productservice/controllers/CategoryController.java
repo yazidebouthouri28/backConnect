@@ -40,9 +40,16 @@ public class CategoryController {
     }
 
     @GetMapping("/root")
-    @Operation(summary = "Get root categories")
+    @Operation(summary = "Get root categories (no parent)")
     public ResponseEntity<ApiResponse<List<CategoryResponse>>> getRootCategories() {
         List<Category> categories = categoryService.getRootCategories();
+        return ResponseEntity.ok(ApiResponse.success(mapper.toCategoryResponseList(categories)));
+    }
+
+    @GetMapping("/{id}/subcategories")
+    @Operation(summary = "Get subcategories of a category")
+    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getSubcategories(@PathVariable UUID id) {
+        List<Category> categories = categoryService.getSubcategories(id);
         return ResponseEntity.ok(ApiResponse.success(mapper.toCategoryResponseList(categories)));
     }
 
@@ -60,18 +67,11 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.success(mapper.toCategoryResponse(category)));
     }
 
-    @GetMapping("/{parentId}/subcategories")
-    @Operation(summary = "Get subcategories")
-    public ResponseEntity<ApiResponse<List<CategoryResponse>>> getSubcategories(@PathVariable UUID parentId) {
-        List<Category> subcategories = categoryService.getSubcategories(parentId);
-        return ResponseEntity.ok(ApiResponse.success(mapper.toCategoryResponseList(subcategories)));
-    }
-
     @PostMapping
-    @Operation(summary = "Create a category")
+    @Operation(summary = "Create a new category")
     public ResponseEntity<ApiResponse<CategoryResponse>> createCategory(
             @Valid @RequestBody CategoryRequest request) {
-        Category category = toEntity(request);
+        Category category = mapToCategory(request);
         Category created = categoryService.createCategory(category, request.getParentId());
         return ResponseEntity.ok(ApiResponse.success("Category created successfully", mapper.toCategoryResponse(created)));
     }
@@ -81,25 +81,25 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
             @PathVariable UUID id,
             @Valid @RequestBody CategoryRequest request) {
-        Category updated = categoryService.updateCategory(id, toEntity(request));
+        Category updated = categoryService.updateCategory(id, mapToCategory(request));
         return ResponseEntity.ok(ApiResponse.success("Category updated successfully", mapper.toCategoryResponse(updated)));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete a category")
+    @Operation(summary = "Delete a category (soft delete)")
     public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable UUID id) {
         categoryService.deleteCategory(id);
         return ResponseEntity.ok(ApiResponse.success("Category deleted", null));
     }
 
-    private Category toEntity(CategoryRequest request) {
+    private Category mapToCategory(CategoryRequest request) {
         return Category.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .image(request.getImage())
                 .slug(request.getSlug())
+                .displayOrder(request.getDisplayOrder())
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
-                .displayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0)
                 .build();
     }
 }

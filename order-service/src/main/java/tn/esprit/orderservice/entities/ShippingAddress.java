@@ -1,5 +1,6 @@
 package tn.esprit.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -7,14 +8,10 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * ShippingAddress entity - migrated from monolith.
- * Changes: ID from Long to UUID, User reference replaced with userId.
- */
 @Entity
 @Table(name = "shipping_addresses", indexes = {
-    @Index(name = "idx_shipaddr_user", columnList = "user_id"),
-    @Index(name = "idx_shipaddr_default", columnList = "is_default")
+        @Index(name = "idx_shipaddr_user", columnList = "user_id"),
+        @Index(name = "idx_shipaddr_default", columnList = "is_default")
 })
 @Getter
 @Setter
@@ -70,12 +67,14 @@ public class ShippingAddress {
     @Builder.Default
     private Boolean isActive = true;
 
-    /** User ID from User Service */
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
     @PrePersist
@@ -92,13 +91,9 @@ public class ShippingAddress {
     public String getFullAddress() {
         StringBuilder sb = new StringBuilder();
         sb.append(addressLine1);
-        if (addressLine2 != null && !addressLine2.isEmpty()) {
-            sb.append(", ").append(addressLine2);
-        }
+        if (addressLine2 != null && !addressLine2.isEmpty()) sb.append(", ").append(addressLine2);
         sb.append(", ").append(city);
-        if (state != null && !state.isEmpty()) {
-            sb.append(", ").append(state);
-        }
+        if (state != null && !state.isEmpty()) sb.append(", ").append(state);
         sb.append(" ").append(postalCode);
         sb.append(", ").append(country);
         return sb.toString();

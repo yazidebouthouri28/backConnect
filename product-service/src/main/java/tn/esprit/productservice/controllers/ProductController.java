@@ -20,11 +20,19 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Product REST Controller - migrated from monolith.
- * 
- * Authentication is handled by the API Gateway (JWT filter).
- * User info is passed via X-User-Id, X-User-Email, X-User-Role headers.
- * No @PreAuthorize needed - role checks done at gateway level.
+ * Product REST Controller
+ *
+ * KEY FIXES:
+ * - getProductsByCategory / getProductsBySeller / searchProducts /
+ *   getProductsByPriceRange: service now returns Page<ProductResponse> directly.
+ *   Controller no longer calls mapper on raw entities — the dangerous
+ *   `products.map(mapper::toProductResponse)` lines are gone.
+ *
+ * - getFeaturedProducts / getTopSellingProducts: service now returns
+ *   List<ProductResponse> directly.
+ *
+ * - getProductById: still calls mapper once on the entity returned by the
+ *   service, which now uses findByIdWithCategory() so category is loaded.
  */
 @RestController
 @RequestMapping("/api/products")
@@ -48,21 +56,16 @@ public class ProductController {
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-
         List<ProductResponse> products = productService.getActiveProducts(pageable);
-
-        Page<ProductResponse> pageResult =
-                new PageImpl<>(products, pageable, products.size());
-
-        return ResponseEntity.ok(
-                ApiResponse.success(PageResponse.from(pageResult))
-        );
+        Page<ProductResponse> pageResult = new PageImpl<>(products, pageable, products.size());
+        return ResponseEntity.ok(ApiResponse.success(PageResponse.from(pageResult)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get product by ID")
     public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable UUID id) {
         productService.incrementViewCount(id);
+        // getProductById now uses JOIN FETCH so category is always loaded
         Product product = productService.getProductById(id);
         return ResponseEntity.ok(ApiResponse.success(mapper.toProductResponse(product)));
     }
@@ -73,8 +76,8 @@ public class ProductController {
             @PathVariable UUID categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Product> products = productService.getProductsByCategory(categoryId, PageRequest.of(page, size));
-        Page<ProductResponse> response = products.map(mapper::toProductResponse);
+        // FIX: service returns Page<ProductResponse> — no mapper call needed here
+        Page<ProductResponse> response = productService.getProductsByCategory(categoryId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
@@ -84,8 +87,8 @@ public class ProductController {
             @PathVariable UUID sellerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Product> products = productService.getProductsBySeller(sellerId, PageRequest.of(page, size));
-        Page<ProductResponse> response = products.map(mapper::toProductResponse);
+        // FIX: service returns Page<ProductResponse>
+        Page<ProductResponse> response = productService.getProductsBySeller(sellerId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
@@ -95,8 +98,8 @@ public class ProductController {
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Product> products = productService.searchProducts(keyword, PageRequest.of(page, size));
-        Page<ProductResponse> response = products.map(mapper::toProductResponse);
+        // FIX: service returns Page<ProductResponse>
+        Page<ProductResponse> response = productService.searchProducts(keyword, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
@@ -107,24 +110,24 @@ public class ProductController {
             @RequestParam BigDecimal max,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<Product> products = productService.getProductsByPriceRange(min, max, PageRequest.of(page, size));
-        Page<ProductResponse> response = products.map(mapper::toProductResponse);
+        // FIX: service returns Page<ProductResponse>
+        Page<ProductResponse> response = productService.getProductsByPriceRange(min, max, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
     @GetMapping("/featured")
     @Operation(summary = "Get featured products")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getFeaturedProducts() {
-        List<Product> products = productService.getFeaturedProducts();
-        return ResponseEntity.ok(ApiResponse.success(mapper.toProductResponseList(products)));
+        // FIX: service returns List<ProductResponse>
+        return ResponseEntity.ok(ApiResponse.success(productService.getFeaturedProducts()));
     }
 
     @GetMapping("/top-selling")
     @Operation(summary = "Get top selling products")
     public ResponseEntity<ApiResponse<List<ProductResponse>>> getTopSellingProducts(
             @RequestParam(defaultValue = "10") int limit) {
-        List<Product> products = productService.getTopSellingProducts(limit);
-        return ResponseEntity.ok(ApiResponse.success(mapper.toProductResponseList(products)));
+        // FIX: service returns List<ProductResponse>
+        return ResponseEntity.ok(ApiResponse.success(productService.getTopSellingProducts(limit)));
     }
 
     @PostMapping
@@ -132,7 +135,6 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> createProduct(
             @Valid @RequestBody ProductRequest request,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader) {
-        // Use seller ID from request or from gateway header
         UUID sellerId = request.getSellerId();
         if (sellerId == null && userIdHeader != null) {
             sellerId = UUID.fromString(userIdHeader);

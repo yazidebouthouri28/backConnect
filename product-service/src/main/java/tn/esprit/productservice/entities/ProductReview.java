@@ -1,5 +1,6 @@
 package tn.esprit.productservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -10,16 +11,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * ProductReview entity - migrated from monolith.
- * Changes:
- * - ID changed from Long to UUID
- * - Removed User entity reference, replaced with userId (UUID)
- */
 @Entity
 @Table(name = "product_reviews", indexes = {
-    @Index(name = "idx_review_product", columnList = "product_id"),
-    @Index(name = "idx_review_user", columnList = "user_id")
+        @Index(name = "idx_review_product", columnList = "product_id"),
+        @Index(name = "idx_review_user",    columnList = "user_id")
 })
 @Getter
 @Setter
@@ -33,15 +28,16 @@ public class ProductReview {
     @Column(columnDefinition = "BINARY(16)")
     private UUID id;
 
+    // FIX: @JsonIgnoreProperties prevents Jackson from traversing into
+    // Product.reviews (circular) and Product.images/tags (lazy collections)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
+    @JsonIgnoreProperties({"reviews", "images", "tags", "category", "hibernateLazyInitializer", "handler"})
     private Product product;
 
-    /** User ID from User Service - no direct entity reference */
     @Column(name = "user_id")
     private UUID userId;
 
-    /** Denormalized user name for display without cross-service calls */
     private String userName;
 
     @Min(1)
@@ -53,7 +49,8 @@ public class ProductReview {
     @Column(length = 2000)
     private String comment;
 
-    @ElementCollection
+    // FIX: EAGER so Jackson can serialize without an open Hibernate session
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "review_images", joinColumns = @JoinColumn(name = "review_id"))
     @Column(name = "image_url")
     @Builder.Default

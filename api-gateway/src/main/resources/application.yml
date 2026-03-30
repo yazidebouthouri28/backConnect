@@ -34,85 +34,67 @@ spring:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
 
       # ============================
-      # Route Definitions (CORRIGÉ)
+      # Route Definitions
       # ============================
       routes:
         # --- Authentication Routes (NO JWT required) ---
         - id: auth-service
-          uri: http://localhost:8089
+          uri: ${USER_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/auth/**
           filters:
             - StripPrefix=0
 
-        # --- User Service Routes (BackConnect) ---
+        # --- User Service Routes (protected) ---
         - id: user-service
-          uri: http://localhost:8089
+          uri: ${USER_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/users/**, /api/wallets/**, /api/wishlists/**, /api/transactions/**
           filters:
             - StripPrefix=0
             - JwtAuthentication
 
-        # --- Product Service Routes ---
+        # --- Product Service Public Routes (no auth for browsing) ---
+        - id: product-service-public
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/products, /api/products/**, /api/categories, /api/categories/**
+            - Method=GET
+          filters:
+            - StripPrefix=0
+          order: -1  # Higher priority (processed first)
+
+        # --- Product Service Routes (protected for writes) ---
         - id: product-service
-          uri: http://localhost:8082
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/products/**, /api/categories/**, /api/reviews/**
           filters:
             - StripPrefix=0
             - JwtAuthentication
 
-        # --- Product Service Public Routes (no auth for browsing) ---
-        - id: product-service-public
-          uri: http://localhost:8082
-          predicates:
-            - Path=/api/products
-            - Method=GET
-          filters:
-            - StripPrefix=0
-          order: -1  # Higher priority (processed first)
-
-        # --- Order Service Routes ---
+        # --- Order Service Routes (protected) ---
         - id: order-service
-          uri: http://localhost:8083
+          uri: ${ORDER_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/orders/**, /api/cart/**, /api/shipping-addresses/**, /api/inventory/**, /api/warehouses/**, /api/rentals/**
           filters:
             - StripPrefix=0
             - JwtAuthentication
 
-        # --- Inventory Service Routes (si nécessaire) ---
-        - id: inventory-service
-          uri: http://localhost:8084
-          predicates:
-            - Path=/api/inventory/**
-          filters:
-            - StripPrefix=0
-            - JwtAuthentication
-
-        # --- Payment Service Routes (si nécessaire) ---
-        - id: payment-service
-          uri: http://localhost:8085
-          predicates:
-            - Path=/api/payments/**
-          filters:
-            - StripPrefix=0
-            - JwtAuthentication
-
   # ============================
-  # Redis Configuration (CORRIGÉ)
+  # Redis Configuration
   # ============================
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 # ============================
-# JWT Configuration (CORRIGÉ)
+# JWT Configuration
 # ============================
 jwt:
-  secret: ecommerce-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm-security
+  secret: ${JWT_SECRET:your-256-bit-secret-key-change-this-in-production-environment}
 
 # ============================
 # Actuator
@@ -133,5 +115,5 @@ management:
 # ============================
 logging:
   level:
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: DEBUG
     tn.esprit.gateway: DEBUG

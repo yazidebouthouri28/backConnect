@@ -10,11 +10,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tn.esprit.productservice.dto.response.ProductResponse;
 import tn.esprit.productservice.entities.Category;
 import tn.esprit.productservice.entities.Product;
 import tn.esprit.productservice.events.ProductEvent;
 import tn.esprit.productservice.events.ProductEventPublisher;
 import tn.esprit.productservice.exception.ResourceNotFoundException;
+import tn.esprit.productservice.mapper.ProductMapper;
 import tn.esprit.productservice.repositories.CategoryRepository;
 import tn.esprit.productservice.repositories.ProductRepository;
 
@@ -24,26 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import tn.esprit.productservice.dto.response.ProductResponse;
-import tn.esprit.productservice.mapper.ProductMapper;
-import tn.esprit.productservice.mapper.ProductMapper;
 
-
-/**
- * Product Service - migrated from monolith with added Kafka events and Redis caching.
- * 
- * Kafka Events Published:
- * - product.created: When a new product is created
- * - product.updated: When product details are modified
- * - product.deleted: When a product is soft-deleted
- * - inventory.low-stock: When stock falls below minStockLevel
- * 
- * Redis Caching Strategy:
- * - "products" cache: Paginated product lists (TTL: 5 min)
- * - "product-detail" cache: Individual product lookups (TTL: 10 min)
- * - "featured-products" cache: Featured product list (TTL: 15 min)
- * - Cache is evicted on create/update/delete operations
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -54,59 +37,66 @@ public class ProductService {
     private final ProductEventPublisher eventPublisher;
     private final ProductMapper mapper;
 
+    // ── Read Operations ───────────────────────────────────────────────────────
 
-    private final ProductMapper productMapper;
-
-
+    @Transactional(readOnly = true)
     @Cacheable(value = "products", key = "'active-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public List<ProductResponse> getActiveProducts(Pageable pageable) {
-
         Page<Product> products = productRepository.findAllActiveWithCategory(pageable);
-
         return products.map(mapper::toProductResponse).getContent();
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "product-detail", key = "#id")
     public Product getProductById(UUID id) {
-        return productRepository.findById(id)
+        return productRepository.findByIdWithCategory(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "products", key = "'category-' + #categoryId + '-' + #pageable.pageNumber")
-    public Page<Product> getProductsByCategory(UUID categoryId, Pageable pageable) {
-        return productRepository.findByCategoryId(categoryId, pageable);
+    public Page<ProductResponse> getProductsByCategory(UUID categoryId, Pageable pageable) {
+        return productRepository.findByCategoryId(categoryId, pageable)
+                .map(mapper::toProductResponse);
     }
 
-    public Page<Product> getProductsBySeller(UUID sellerId, Pageable pageable) {
-        return productRepository.findBySellerId(sellerId, pageable);
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProductsBySeller(UUID sellerId, Pageable pageable) {
+        return productRepository.findBySellerId(sellerId, pageable)
+                .map(mapper::toProductResponse);
     }
 
-    public Page<Product> searchProducts(String keyword, Pageable pageable) {
-        return productRepository.searchProducts(keyword, pageable);
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> searchProducts(String keyword, Pageable pageable) {
+        return productRepository.searchProducts(keyword, pageable)
+                .map(mapper::toProductResponse);
     }
 
-    public Page<Product> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
-        return productRepository.findByPriceRange(minPrice, maxPrice, pageable);
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable) {
+        return productRepository.findByPriceRange(minPrice, maxPrice, pageable)
+                .map(mapper::toProductResponse);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "featured-products")
-    public List<Product> getFeaturedProducts() {
-        log.debug("Fetching featured products from DB");
-        return productRepository.findByIsFeaturedTrueAndIsActiveTrue();
+    public List<ProductResponse> getFeaturedProducts() {
+        return mapper.toProductResponseList(productRepository.findByIsFeaturedTrueAndIsActiveTrue());
     }
 
-    public List<Product> getTopSellingProducts(int limit) {
-        return productRepository.findTopSellingProducts(PageRequest.of(0, limit));
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getTopSellingProducts(int limit) {
+        return mapper.toProductResponseList(
+                productRepository.findTopSellingProducts(PageRequest.of(0, limit))
+        );
     }
 
-    /**
-     * Create a new product and publish a Kafka event.
-     * Cache is evicted for product lists so new product appears.
-     */
+    // ── Write Operations ──────────────────────────────────────────────────────
+
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "products", allEntries = true),
-        @CacheEvict(value = "featured-products", allEntries = true)
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "featured-products", allEntries = true)
     })
     public Product createProduct(Product product, UUID categoryId, UUID sellerId) {
         if (categoryId != null) {
@@ -114,26 +104,24 @@ public class ProductService {
                     .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + categoryId));
             product.setCategory(category);
         }
-
         product.setSellerId(sellerId);
         Product saved = productRepository.save(product);
 
-        // Publish Kafka event for product creation
-        ProductEvent event = buildProductEvent(saved);
-        eventPublisher.publishProductCreated(event);
-        log.info("Product created and event published: {} ({})", saved.getName(), saved.getId());
+        // FIX: Kafka publish is fire-and-forget. If Kafka is down, we log the
+        // error but do NOT let it fail the HTTP response or roll back the save.
+        publishEvent(() -> {
+            ProductEvent event = buildProductEvent(saved);
+            eventPublisher.publishProductCreated(event);
+        }, "product.created", saved.getId());
 
         return saved;
     }
 
-    /**
-     * Update product and publish Kafka event with changes map.
-     */
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "products", allEntries = true),
-        @CacheEvict(value = "product-detail", key = "#id"),
-        @CacheEvict(value = "featured-products", allEntries = true)
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product-detail", key = "#id"),
+            @CacheEvict(value = "featured-products", allEntries = true)
     })
     public Product updateProduct(UUID id, Product productDetails) {
         Product product = getProductById(id);
@@ -143,63 +131,58 @@ public class ProductService {
             changes.put("name", productDetails.getName());
             product.setName(productDetails.getName());
         }
-        if (productDetails.getDescription() != null) product.setDescription(productDetails.getDescription());
+        if (productDetails.getDescription() != null)   product.setDescription(productDetails.getDescription());
         if (productDetails.getPrice() != null && !productDetails.getPrice().equals(product.getPrice())) {
             changes.put("price", productDetails.getPrice());
             product.setPrice(productDetails.getPrice());
         }
-        if (productDetails.getOriginalPrice() != null) product.setOriginalPrice(productDetails.getOriginalPrice());
+        if (productDetails.getOriginalPrice() != null)  product.setOriginalPrice(productDetails.getOriginalPrice());
         if (productDetails.getStockQuantity() != null && !productDetails.getStockQuantity().equals(product.getStockQuantity())) {
             changes.put("stockQuantity", productDetails.getStockQuantity());
             product.setStockQuantity(productDetails.getStockQuantity());
         }
-        if (productDetails.getSku() != null) product.setSku(productDetails.getSku());
-        if (productDetails.getBrand() != null) product.setBrand(productDetails.getBrand());
-        if (productDetails.getImages() != null) product.setImages(productDetails.getImages());
-        if (productDetails.getThumbnail() != null) product.setThumbnail(productDetails.getThumbnail());
-        if (productDetails.getIsActive() != null) product.setIsActive(productDetails.getIsActive());
+        if (productDetails.getSku() != null)        product.setSku(productDetails.getSku());
+        if (productDetails.getBrand() != null)      product.setBrand(productDetails.getBrand());
+        if (productDetails.getImages() != null)     product.setImages(productDetails.getImages());
+        if (productDetails.getThumbnail() != null)  product.setThumbnail(productDetails.getThumbnail());
+        if (productDetails.getIsActive() != null)   product.setIsActive(productDetails.getIsActive());
         if (productDetails.getIsFeatured() != null) product.setIsFeatured(productDetails.getIsFeatured());
-        if (productDetails.getIsOnSale() != null) product.setIsOnSale(productDetails.getIsOnSale());
+        if (productDetails.getIsOnSale() != null)   product.setIsOnSale(productDetails.getIsOnSale());
 
         Product saved = productRepository.save(product);
 
-        // Publish Kafka update event with what changed
-        ProductEvent event = buildProductEvent(saved);
-        event.setChanges(changes);
-        eventPublisher.publishProductUpdated(event);
-        log.info("Product updated and event published: {} ({})", saved.getName(), saved.getId());
+        // FIX: fire-and-forget Kafka publish
+        final Map<String, Object> finalChanges = changes;
+        publishEvent(() -> {
+            ProductEvent event = buildProductEvent(saved);
+            event.setChanges(finalChanges);
+            eventPublisher.publishProductUpdated(event);
+        }, "product.updated", saved.getId());
 
-        // Check for low stock and publish alert if needed
         checkLowStock(saved);
-
         return saved;
     }
 
-    /**
-     * Update stock quantity for a product.
-     */
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "products", allEntries = true),
-        @CacheEvict(value = "product-detail", key = "#id")
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product-detail", key = "#id")
     })
     public Product updateStock(UUID id, int quantityChange) {
         Product product = getProductById(id);
-        int newStock = product.getStockQuantity() + quantityChange;
-        if (newStock < 0) newStock = 0;
+        int newStock = Math.max(0, product.getStockQuantity() + quantityChange);
         product.setStockQuantity(newStock);
         Product saved = productRepository.save(product);
 
-        // Publish update event for stock change
-        Map<String, Object> changes = new HashMap<>();
-        changes.put("stockQuantity", newStock);
-        ProductEvent event = buildProductEvent(saved);
-        event.setChanges(changes);
-        eventPublisher.publishProductUpdated(event);
+        publishEvent(() -> {
+            Map<String, Object> changes = new HashMap<>();
+            changes.put("stockQuantity", newStock);
+            ProductEvent event = buildProductEvent(saved);
+            event.setChanges(changes);
+            eventPublisher.publishProductUpdated(event);
+        }, "stock.updated", saved.getId());
 
-        // Check for low stock
         checkLowStock(saved);
-
         return saved;
     }
 
@@ -210,27 +193,41 @@ public class ProductService {
         productRepository.save(product);
     }
 
-    /**
-     * Soft-delete a product and publish Kafka delete event.
-     */
     @Transactional
     @Caching(evict = {
-        @CacheEvict(value = "products", allEntries = true),
-        @CacheEvict(value = "product-detail", key = "#id"),
-        @CacheEvict(value = "featured-products", allEntries = true)
+            @CacheEvict(value = "products", allEntries = true),
+            @CacheEvict(value = "product-detail", key = "#id"),
+            @CacheEvict(value = "featured-products", allEntries = true)
     })
     public void deleteProduct(UUID id) {
         Product product = getProductById(id);
         product.setIsActive(false);
         productRepository.save(product);
 
-        // Publish Kafka delete event
-        ProductEvent event = buildProductEvent(product);
-        eventPublisher.publishProductDeleted(event);
-        log.info("Product soft-deleted and event published: {} ({})", product.getName(), product.getId());
+        publishEvent(() -> {
+            ProductEvent event = buildProductEvent(product);
+            eventPublisher.publishProductDeleted(event);
+        }, "product.deleted", product.getId());
     }
 
-    // ── Helper Methods ───────────────────────────────────────────────────────
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /**
+     * FIX: Central fire-and-forget Kafka publisher.
+     * Wraps every Kafka send in try/catch so that:
+     * - If Kafka is running: event is published normally.
+     * - If Kafka is down: error is logged, but the HTTP response succeeds.
+     *   The DB transaction is already committed before this runs.
+     */
+    private void publishEvent(Runnable publishAction, String eventType, UUID productId) {
+        try {
+            publishAction.run();
+        } catch (Exception e) {
+            log.error("Failed to publish Kafka event '{}' for product {}. " +
+                            "Product was saved successfully. Kafka may be down: {}",
+                    eventType, productId, e.getMessage());
+        }
+    }
 
     private ProductEvent buildProductEvent(Product product) {
         return ProductEvent.builder()
@@ -246,15 +243,15 @@ public class ProductService {
                 .build();
     }
 
-    /**
-     * Check if product stock is below minimum level and publish low-stock alert.
-     */
     private void checkLowStock(Product product) {
         if (product.getStockQuantity() != null && product.getMinStockLevel() != null
                 && product.getStockQuantity() <= product.getMinStockLevel()) {
-            ProductEvent event = buildProductEvent(product);
-            eventPublisher.publishLowStock(event);
-            log.warn("Low stock alert for product: {} (stock: {})", product.getName(), product.getStockQuantity());
+            publishEvent(() -> {
+                ProductEvent event = buildProductEvent(product);
+                eventPublisher.publishLowStock(event);
+            }, "inventory.low-stock", product.getId());
+            log.warn("Low stock alert for product: {} (stock: {})",
+                    product.getName(), product.getStockQuantity());
         }
     }
 }

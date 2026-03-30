@@ -1,5 +1,6 @@
 package tn.esprit.orderservice.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,10 @@ public class ShippingAddressResponse {
     private Boolean isActive;
     private UUID userId;
     private String fullAddress;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern="yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 }

@@ -13,7 +13,6 @@ import tn.esprit.productservice.dto.PageResponse;
 import tn.esprit.productservice.dto.request.ReviewRequest;
 import tn.esprit.productservice.dto.response.ReviewResponse;
 import tn.esprit.productservice.entities.ProductReview;
-import tn.esprit.productservice.mapper.ProductMapper;
 import tn.esprit.productservice.services.ReviewService;
 
 import java.util.UUID;
@@ -25,7 +24,6 @@ import java.util.UUID;
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final ProductMapper mapper;
 
     @GetMapping("/product/{productId}")
     @Operation(summary = "Get reviews for a product")
@@ -33,8 +31,8 @@ public class ReviewController {
             @PathVariable UUID productId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<ProductReview> reviews = reviewService.getReviewsByProduct(productId, PageRequest.of(page, size));
-        Page<ReviewResponse> response = reviews.map(mapper::toReviewResponse);
+        // FIX: service returns Page<ReviewResponse> directly — no mapper call needed
+        Page<ReviewResponse> response = reviewService.getReviewsByProduct(productId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
@@ -44,16 +42,16 @@ public class ReviewController {
             @PathVariable UUID userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Page<ProductReview> reviews = reviewService.getReviewsByUser(userId, PageRequest.of(page, size));
-        Page<ReviewResponse> response = reviews.map(mapper::toReviewResponse);
+        // FIX: service returns Page<ReviewResponse> directly
+        Page<ReviewResponse> response = reviewService.getReviewsByUser(userId, PageRequest.of(page, size));
         return ResponseEntity.ok(ApiResponse.success(PageResponse.from(response)));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get review by ID")
     public ResponseEntity<ApiResponse<ReviewResponse>> getReviewById(@PathVariable UUID id) {
-        ProductReview review = reviewService.getReviewById(id);
-        return ResponseEntity.ok(ApiResponse.success(mapper.toReviewResponse(review)));
+        // FIX: service returns ReviewResponse directly
+        return ResponseEntity.ok(ApiResponse.success(reviewService.getReviewById(id)));
     }
 
     @PostMapping
@@ -62,6 +60,7 @@ public class ReviewController {
             @Valid @RequestBody ReviewRequest request,
             @RequestHeader(value = "X-User-Id", required = false) String userIdHeader,
             @RequestHeader(value = "X-User-Name", required = false) String userNameHeader) {
+
         UUID userId = userIdHeader != null ? UUID.fromString(userIdHeader) : null;
         String userName = userNameHeader != null ? userNameHeader : "Anonymous";
 
@@ -72,8 +71,9 @@ public class ReviewController {
                 .images(request.getImages())
                 .build();
 
-        ProductReview created = reviewService.createReview(review, request.getProductId(), userId, userName);
-        return ResponseEntity.ok(ApiResponse.success("Review created successfully", mapper.toReviewResponse(created)));
+        // FIX: service returns ReviewResponse directly
+        ReviewResponse created = reviewService.createReview(review, request.getProductId(), userId, userName);
+        return ResponseEntity.ok(ApiResponse.success("Review created successfully", created));
     }
 
     @DeleteMapping("/{id}")

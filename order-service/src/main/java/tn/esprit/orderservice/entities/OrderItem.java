@@ -1,18 +1,12 @@
 package tn.esprit.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/**
- * OrderItem entity - migrated from monolith.
- * Changes:
- * - ID changed from Long to UUID
- * - Removed Product entity reference, replaced with productId (UUID)
- * - Product data is denormalized (snapshot) at order time for data consistency
- */
 @Entity
 @Table(name = "order_items")
 @Getter
@@ -29,19 +23,14 @@ public class OrderItem {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
+    @JsonIgnore
     private Order order;
 
-    /** Product ID from Product Service - denormalized reference */
     @Column(name = "product_id")
     private UUID productId;
 
-    /** Snapshot of product name at order time */
     private String productName;
-
-    /** Snapshot of product SKU at order time */
     private String productSku;
-
-    /** Snapshot of product thumbnail at order time */
     private String productThumbnail;
 
     private Integer quantity;

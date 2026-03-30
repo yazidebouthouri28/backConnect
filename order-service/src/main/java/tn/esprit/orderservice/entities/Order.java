@@ -1,5 +1,6 @@
 package tn.esprit.orderservice.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
 import tn.esprit.orderservice.enums.OrderStatus;
@@ -11,18 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Order entity - migrated from monolith.
- * Changes:
- * - ID changed from Long to UUID
- * - Removed User entity reference, replaced with userId (UUID)
- * - Product references in OrderItem replaced with productId + snapshot data
- */
 @Entity
 @Table(name = "orders", indexes = {
-    @Index(name = "idx_order_user", columnList = "user_id"),
-    @Index(name = "idx_order_status", columnList = "status"),
-    @Index(name = "idx_order_number", columnList = "order_number")
+        @Index(name = "idx_order_user", columnList = "user_id"),
+        @Index(name = "idx_order_status", columnList = "status"),
+        @Index(name = "idx_order_number", columnList = "order_number")
 })
 @Getter
 @Setter
@@ -39,11 +33,9 @@ public class Order {
     @Column(name = "order_number", unique = true)
     private String orderNumber;
 
-    /** User ID from User Service - no direct entity reference */
     @Column(name = "user_id")
     private UUID userId;
 
-    /** Denormalized user email for notifications */
     private String userEmail;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -81,7 +73,6 @@ public class Order {
     private String paymentMethod;
     private String paymentTransactionId;
 
-    // Shipping info
     private String shippingName;
     private String shippingPhone;
     @Column(length = 500)
@@ -97,13 +88,25 @@ public class Order {
     @Column(length = 1000)
     private String notes;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime orderedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime paidAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime shippedAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime deliveredAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime cancelledAt;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime updatedAt;
 
     @PrePersist

@@ -6,7 +6,7 @@ spring:
     name: product-service
 
   # ============================
-  # Database Configuration (MODIFIÉ)
+  # Database Configuration
   # ============================
   datasource:
     url: jdbc:mysql://localhost:3306/product_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
@@ -22,11 +22,13 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
-        format_sql: true
+        format_sql: false
+    # FIX: open-in-view MUST stay false — we handle sessions explicitly
+    # via @Transactional. Enabling it would hide lazy-loading bugs.
     open-in-view: false
 
   # ============================
@@ -37,10 +39,23 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      # FIX: was "all" which requires full ISR acknowledgement and blocks longest.
+      # "1" = leader acknowledges, good balance of safety and speed.
+      acks: "1"
+      retries: 3
       properties:
         spring.json.add.type.headers: false
-      acks: all
-      retries: 3
+        # FIX: max.block.ms — how long kafkaTemplate.send() blocks waiting for
+        # metadata/connection before throwing. Default is 60000ms (60s) which
+        # caused the long hang + "Send failed" error. Now 3s.
+        max.block.ms: 3000
+        # FIX: request.timeout.ms — how long to wait for broker response per request
+        request.timeout.ms: 3000
+        # FIX: delivery.timeout.ms — total time budget for a send including retries.
+        # Must be >= request.timeout.ms. Set higher than request.timeout to allow retries.
+        delivery.timeout.ms: 10000
+        # FIX: retry.backoff.ms — wait between retries (default 100ms is fine)
+        retry.backoff.ms: 500
     consumer:
       group-id: product-service-group
       auto-offset-reset: earliest
@@ -48,6 +63,9 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+        # FIX: prevent consumer from blocking startup if Kafka is unreachable
+        session.timeout.ms: 10000
+        heartbeat.interval.ms: 3000
 
   # ============================
   # Redis Configuration
@@ -56,7 +74,16 @@ spring:
     redis:
       host: localhost
       port: 6379
+      # FIX: 2s connect timeout — if Redis is down, fail fast
       timeout: 2000ms
+      connect-timeout: 2000ms
+
+  cache:
+    # FIX: if Redis is down the app still works — cache just misses every time
+    type: redis
+    redis:
+      time-to-live: 300000        # default TTL: 5 minutes for all caches
+      cache-null-values: false    # don't cache null results
 
   # ============================
   # Jackson Configuration
@@ -64,6 +91,10 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+      # FIX: prevents "could not write JSON" on empty Hibernate collections
+      fail-on-empty-beans: false
+    deserialization:
+      fail-on-unknown-properties: false
     default-property-inclusion: non_null
 
 # ============================
@@ -79,13 +110,17 @@ management:
       show-details: always
 
 # ============================
-# OpenAPI
+# OpenAPI / Swagger
 # ============================
 springdoc:
   api-docs:
-    path: /api/products/v3/api-docs
+    # FIX: api-docs path should be at service root, not under /api/products
+    # Otherwise Swagger can't resolve the spec when behind a gateway
+    path: /v3/api-docs
   swagger-ui:
-    path: /api/products/swagger-ui.html
+    path: /swagger-ui.html
+    # Show all endpoints expanded by default
+    operations-sorter: alpha
 
 # ============================
 # Logging
@@ -94,4 +129,9 @@ logging:
   level:
     tn.esprit.productservice: DEBUG
     org.springframework.kafka: WARN
+    org.springframework.kafka.listener: ERROR
+    org.apache.kafka: ERROR
     org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
+    # Silence Hibernate proxy warnings that are now handled
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: ERROR
