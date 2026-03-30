@@ -8,5 +8,6 @@ public enum Role {
     ORGANIZER,
     PARTICIPANT,
     MODERATOR,
-    SPONSOR
+    SPONSOR,
+    CAMPER
 }
