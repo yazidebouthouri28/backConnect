@@ -16,7 +16,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'integrationBranch3',
+                git branch: 'integrationBranch4',
                     url: "${GITHUB_REPO}",
                     credentialsId: 'github-credentials'
             }
