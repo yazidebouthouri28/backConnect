@@ -24,7 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
-@CrossOrigin(origins = "http://localhost:4200", allowedHeaders = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS})
+
 @RequiredArgsConstructor
 @Tag(name = "Events", description = "Event management endpoints")
 @SecurityRequirement(name = "Bearer Authentication")

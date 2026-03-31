@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/scenes-360")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+
 public class Scene360Controller {
 
     private final Scene360Service scene360Service;

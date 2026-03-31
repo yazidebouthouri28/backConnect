@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/virtual-tours")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+
 public class VirtualTourController {
 
     private final VirtualTourService virtualTourService;
