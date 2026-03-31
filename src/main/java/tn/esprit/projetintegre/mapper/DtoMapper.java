@@ -494,7 +494,7 @@ public class DtoMapper {
                 .icon(entity.getIcon())
                 .pointsValue(entity.getPointsValue())
                 .organizerId(entity.getOrganizer() != null ? entity.getOrganizer().getId() : null)
-                .organizerName(entity.getOrganizer() != null ? entity.getOrganizer().getCompanyName() : null)
+                .organizerName(entity.getOrganizer() != null && Hibernate.isInitialized(entity.getOrganizer()) ? entity.getOrganizer().getCompanyName() : null)
                 .build();
     }
 

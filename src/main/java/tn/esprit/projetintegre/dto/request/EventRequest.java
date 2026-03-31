@@ -29,7 +29,6 @@ public class EventRequest {
     private String category;
 
     @NotNull(message = "La date de début est obligatoire")
-    @FutureOrPresent(message = "La date de début doit être dans le présent ou le futur")
     private LocalDateTime startDate;
 
     @NotNull(message = "La date de fin est obligatoire")
