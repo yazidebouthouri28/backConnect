@@ -7,12 +7,6 @@ pipeline {
         DOCKER_TAG   = "${BUILD_NUMBER}"
     }
 
-tools {
-    maven 'Maven3'
-    jdk   'JDK17'
-    sonarQubeScanner 'SonarScanner'   // ✅ correct
-}
-
     stages {
         stage('Checkout') {
             steps {
