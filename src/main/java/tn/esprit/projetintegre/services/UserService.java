@@ -11,6 +11,7 @@ import tn.esprit.projetintegre.dto.request.ProfileUpdateRequest;
 import tn.esprit.projetintegre.entities.User;
 import tn.esprit.projetintegre.enums.Role;
 import tn.esprit.projetintegre.exception.ResourceNotFoundException;
+import tn.esprit.projetintegre.repositories.SponsorRepository;
 import tn.esprit.projetintegre.repositories.UserRepository;
 
 import java.time.LocalDateTime;
@@ -21,6 +22,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final SponsorRepository sponsorRepository;
     private final PasswordEncoder passwordEncoder;
 
     public List<User> getAllUsers() {
@@ -70,7 +72,17 @@ public class UserService {
         }
 
         user.setUpdatedAt(LocalDateTime.now());
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+
+        // Sync avatar with sponsor logo
+        if (req.getAvatar() != null && user.getEmail() != null) {
+            sponsorRepository.findByEmail(user.getEmail()).ifPresent(sponsor -> {
+                sponsor.setLogo(req.getAvatar());
+                sponsorRepository.save(sponsor);
+            });
+        }
+
+        return updatedUser;
     }
 
     @Transactional
