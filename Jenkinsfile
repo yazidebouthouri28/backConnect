@@ -41,14 +41,14 @@ pipeline {
         }
 
         // ========================
-        // Build services
+        // Build services (Maven)
         // ========================
         stage('Build Services') {
             parallel {
-                stage('Build user-service') { steps { dir('user-service') { sh 'mvn clean compile -B' } } }
-                stage('Build product-service') { steps { dir('product-service') { sh 'mvn clean compile -B' } } }
-                stage('Build order-service') { steps { dir('order-service') { sh 'mvn clean compile -B' } } }
-                stage('Build api-gateway') { steps { dir('api-gateway') { sh 'mvn clean compile -B' } } }
+                stage('Build user-service') { steps { dir('user-service') { sh './mvnw clean compile -B' } } }
+                stage('Build product-service') { steps { dir('product-service') { sh './mvnw clean compile -B' } } }
+                stage('Build order-service') { steps { dir('order-service') { sh './mvnw clean compile -B' } } }
+                stage('Build api-gateway') { steps { dir('api-gateway') { sh './mvnw clean compile -B' } } }
             }
         }
 
@@ -57,10 +57,10 @@ pipeline {
         // ========================
         stage('Run Tests') {
             parallel {
-                stage('Test user-service') { steps { dir('user-service') { sh 'mvn test -B' } } }
-                stage('Test product-service') { steps { dir('product-service') { sh 'mvn test -B' } } }
-                stage('Test order-service') { steps { dir('order-service') { sh 'mvn test -B' } } }
-                stage('Test api-gateway') { steps { dir('api-gateway') { sh 'mvn test -B' } } }
+                stage('Test user-service') { steps { dir('user-service') { sh './mvnw test -B' } } }
+                stage('Test product-service') { steps { dir('product-service') { sh './mvnw test -B' } } }
+                stage('Test order-service') { steps { dir('order-service') { sh './mvnw test -B' } } }
+                stage('Test api-gateway') { steps { dir('api-gateway') { sh './mvnw test -B' } } }
             }
         }
 
@@ -69,10 +69,10 @@ pipeline {
         // ========================
         stage('Package') {
             parallel {
-                stage('Package user-service') { steps { dir('user-service') { sh 'mvn package -DskipTests' } } }
-                stage('Package product-service') { steps { dir('product-service') { sh 'mvn package -DskipTests' } } }
-                stage('Package order-service') { steps { dir('order-service') { sh 'mvn package -DskipTests' } } }
-                stage('Package api-gateway') { steps { dir('api-gateway') { sh 'mvn package -DskipTests' } } }
+                stage('Package user-service') { steps { dir('user-service') { sh './mvnw package -DskipTests -B' } } }
+                stage('Package product-service') { steps { dir('product-service') { sh './mvnw package -DskipTests -B' } } }
+                stage('Package order-service') { steps { dir('order-service') { sh './mvnw package -DskipTests -B' } } }
+                stage('Package api-gateway') { steps { dir('api-gateway') { sh './mvnw package -DskipTests -B' } } }
             }
         }
 
@@ -82,16 +82,32 @@ pipeline {
         stage('Build Docker Images') {
             parallel {
                 stage('Docker user-service') {
-                    steps { dir('user-service') { sh "docker build -t ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${USER_SERVICE}:latest ." } }
+                    steps {
+                        dir('user-service') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${USER_SERVICE}:latest ."
+                        }
+                    }
                 }
                 stage('Docker product-service') {
-                    steps { dir('product-service') { sh "docker build -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest ." } }
+                    steps {
+                        dir('product-service') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest ."
+                        }
+                    }
                 }
                 stage('Docker order-service') {
-                    steps { dir('order-service') { sh "docker build -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest ." } }
+                    steps {
+                        dir('order-service') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest ."
+                        }
+                    }
                 }
                 stage('Docker api-gateway') {
-                    steps { dir('api-gateway') { sh "docker build -t ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${API_GATEWAY}:latest ." } }
+                    steps {
+                        dir('api-gateway') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${API_GATEWAY}:latest ."
+                        }
+                    }
                 }
             }
         }
@@ -103,14 +119,11 @@ pipeline {
             steps {
                 script {
                     docker.withRegistry('', DOCKER_CREDENTIALS) {
-                        echo 'Logging into Docker Hub...'
-                        sh "docker login -u ${DOCKER_USERNAME} -p \$DOCKER_HUB_PASSWORD || true"
-
+                        echo 'Pushing Docker images...'
                         def services = [USER_SERVICE, PRODUCT_SERVICE, ORDER_SERVICE, API_GATEWAY]
-
                         for (svc in services) {
-                            sh "docker push ${DOCKER_USERNAME}/${svc}:${IMAGE_TAG} || true"
-                            sh "docker push ${DOCKER_USERNAME}/${svc}:latest || true"
+                            sh "docker push ${DOCKER_USERNAME}/${svc}:${IMAGE_TAG}"
+                            sh "docker push ${DOCKER_USERNAME}/${svc}:latest"
                         }
                     }
                 }
@@ -129,18 +142,23 @@ pipeline {
                         input message: 'Deploy to Kubernetes ?', ok: 'Deploy'
                     }
 
-                    def services = [USER_SERVICE, PRODUCT_SERVICE, ORDER_SERVICE, API_GATEWAY]
-
                     // Backup original YAMLs
-                    sh "cp -r k8s k8s_backup"
+                    sh "cp -r k8s k8s_backup || true"
 
-                    // Replace image tags dynamically
+                    // Update image tags dynamically
+                    def servicesPorts = [
+                        "${USER_SERVICE}": 8084,
+                        "${PRODUCT_SERVICE}": 8082,
+                        "${ORDER_SERVICE}": 8083,
+                        "${API_GATEWAY}": 8088
+                    ]
+
+                    servicesPorts.each { svc, port ->
+                        sh "sed -i 's|image:.*${svc}.*|image: ${DOCKER_USERNAME}/${svc}:${IMAGE_TAG}|' k8s/*-deployment.yaml"
+                    }
+
+                    // Apply Kubernetes manifests
                     sh """
-                        sed -i 's|image:.*user-service.*|image: ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG}|' k8s/10-user-service-deployment.yaml
-                        sed -i 's|image:.*product-service.*|image: ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG}|' k8s/11-product-service-deployment.yaml
-                        sed -i 's|image:.*order-service.*|image: ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG}|' k8s/12-order-service-deployment.yaml
-                        sed -i 's|image:.*api-gateway.*|image: ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG}|' k8s/13-api-gateway-deployment.yaml
-
                         kubectl apply -f k8s/00-namespace.yaml
                         kubectl apply -f k8s/01-configmap.yaml
                         kubectl apply -f k8s/02-secrets.yaml
