@@ -22,7 +22,6 @@ pipeline {
 
     options {
         timestamps()
-        ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timeout(time: 30, unit: 'MINUTES')
         skipStagesAfterUnstable()
@@ -55,7 +54,6 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    // ✅ Login en clair
                     sh "docker login -u ${DOCKER_USER} -p '${DOCKER_PASS}'"
 
                     parallel SERVICES.collectEntries { svc ->
