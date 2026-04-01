@@ -1,4 +1,5 @@
 pipeline {
+
     agent any
 
     environment {
@@ -51,7 +52,10 @@ pipeline {
         }
 
         stage('Build Microservices') {
-            parallel failFast: false, stages: [
+
+            failFast false
+
+            parallel {
 
                 stage('Build user-service') {
                     steps {
@@ -59,7 +63,7 @@ pipeline {
                             sh './mvnw -B clean package -DskipTests'
                         }
                     }
-                },
+                }
 
                 stage('Build product-service') {
                     steps {
@@ -67,7 +71,7 @@ pipeline {
                             sh './mvnw -B clean package -DskipTests'
                         }
                     }
-                },
+                }
 
                 stage('Build order-service') {
                     steps {
@@ -75,7 +79,7 @@ pipeline {
                             sh './mvnw -B clean package -DskipTests'
                         }
                     }
-                },
+                }
 
                 stage('Build api-gateway') {
                     steps {
@@ -85,62 +89,48 @@ pipeline {
                     }
                 }
 
-            ]
+            }
         }
 
         stage('Build Docker Images') {
 
-            parallel failFast: false, stages: [
+            failFast false
+
+            parallel {
 
                 stage('Docker user-service') {
                     steps {
                         dir('user-service') {
-                            sh """
-                            docker build \
-                            -t ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG} \
-                            -t ${DOCKER_USERNAME}/${USER_SERVICE}:latest .
-                            """
-                        }
-                    }
-                },
-
-                stage('Docker product-service') {
-                    steps {
-                        dir('product-service') {
-                            sh """
-                            docker build \
-                            -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG} \
-                            -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest .
-                            """
-                        }
-                    }
-                },
-
-                stage('Docker order-service') {
-                    steps {
-                        dir('order-service') {
-                            sh """
-                            docker build \
-                            -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG} \
-                            -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest .
-                            """
-                        }
-                    }
-                },
-
-                stage('Docker api-gateway') {
-                    steps {
-                        dir('api-gateway') {
-                            sh """
-                            docker build \
-                            -t ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG} \
-                            -t ${DOCKER_USERNAME}/${API_GATEWAY}:latest .
-                            """
+                            sh "docker build -t ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${USER_SERVICE}:latest ."
                         }
                     }
                 }
 
-            ]
+                stage('Docker product-service') {
+                    steps {
+                        dir('product-service') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest ."
+                        }
+                    }
+                }
+
+                stage('Docker order-service') {
+                    steps {
+                        dir('order-service') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest ."
+                        }
+                    }
+                }
+
+                stage('Docker api-gateway') {
+                    steps {
+                        dir('api-gateway') {
+                            sh "docker build -t ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${API_GATEWAY}:latest ."
+                        }
+                    }
+                }
+
+            }
         }
 
         stage('Push Images') {
@@ -202,20 +192,14 @@ pipeline {
 
                     for (svc in services) {
 
-                        sh """
-                        kubectl set image deployment/${svc} \
-                        ${svc}=${DOCKER_USERNAME}/${svc}:${IMAGE_TAG} \
-                        -n ecommerce
-                        """
+                        sh "kubectl set image deployment/${svc} ${svc}=${DOCKER_USERNAME}/${svc}:${IMAGE_TAG} -n ecommerce"
 
-                        sh """
-                        kubectl rollout status deployment/${svc} \
-                        -n ecommerce
-                        """
+                        sh "kubectl rollout status deployment/${svc} -n ecommerce"
                     }
                 }
             }
         }
+
     }
 
     post {
