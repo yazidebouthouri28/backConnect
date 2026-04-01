@@ -6,7 +6,6 @@ pipeline {
     }
     options {
         timestamps()
-        ansiColor('xterm')
         buildDiscarder(logRotator(numToKeepStr: '10'))
         timeout(time: 30, unit: 'MINUTES')
     }
@@ -14,7 +13,9 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                ansiColor('xterm') {
+                    checkout scm
+                }
             }
         }
 
@@ -22,25 +23,31 @@ pipeline {
             parallel {
                 stage('Product Service') {
                     steps {
-                        dir('product-service') {
-                            sh 'chmod +x mvnw'
-                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        ansiColor('xterm') {
+                            dir('product-service') {
+                                sh 'chmod +x mvnw'
+                                sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                            }
                         }
                     }
                 }
                 stage('Order Service') {
                     steps {
-                        dir('order-service') {
-                            sh 'chmod +x mvnw'
-                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        ansiColor('xterm') {
+                            dir('order-service') {
+                                sh 'chmod +x mvnw'
+                                sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                            }
                         }
                     }
                 }
                 stage('API Gateway') {
                     steps {
-                        dir('api-gateway') {
-                            sh 'chmod +x mvnw'
-                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        ansiColor('xterm') {
+                            dir('api-gateway') {
+                                sh 'chmod +x mvnw'
+                                sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                            }
                         }
                     }
                 }
@@ -49,9 +56,11 @@ pipeline {
 
         stage('Docker Build Images') {
             steps {
-                sh '''
-                docker-compose -f docker-compose.yml build --parallel
-                '''
+                ansiColor('xterm') {
+                    sh '''
+                    docker-compose -f docker-compose.yml build --parallel
+                    '''
+                }
             }
         }
 
@@ -60,9 +69,11 @@ pipeline {
                 expression { return env.BRANCH_NAME == 'main' }
             }
             steps {
-                script {
-                    sh 'echo $DOCKER_HUB_PASS | docker login -u $DOCKER_HUB_USER --password-stdin'
-                    sh 'docker-compose -f docker-compose.yml push || true'
+                ansiColor('xterm') {
+                    script {
+                        sh 'echo $DOCKER_HUB_PASS | docker login -u $DOCKER_HUB_USER --password-stdin'
+                        sh 'docker-compose -f docker-compose.yml push || true'
+                    }
                 }
             }
         }
@@ -72,7 +83,9 @@ pipeline {
                 expression { return env.BRANCH_NAME == 'main' }
             }
             steps {
-                sh 'kubectl apply -f k8s/'
+                ansiColor('xterm') {
+                    sh 'kubectl apply -f k8s/'
+                }
             }
         }
     }
