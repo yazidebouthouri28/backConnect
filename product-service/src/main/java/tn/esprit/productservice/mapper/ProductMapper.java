@@ -9,24 +9,17 @@ import tn.esprit.productservice.entities.Category;
 import tn.esprit.productservice.entities.Product;
 import tn.esprit.productservice.entities.ProductReview;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * DTO Mapper for Product Service entities.
- *
- * FIX: All lazy-loaded associations are checked with Hibernate.isInitialized()
- * before accessing their fields. This prevents the "could not initialize proxy
- * - no Session" error when the mapper is called outside a transaction.
- */
 @Component
 public class ProductMapper {
 
     public ProductResponse toProductResponse(Product entity) {
         if (entity == null) return null;
 
-        // FIX: Only access category fields if the proxy is already initialized.
         Category category = entity.getCategory();
         boolean categoryLoaded = category != null && Hibernate.isInitialized(category);
 
@@ -45,7 +38,7 @@ public class ProductMapper {
                 .sellerId(entity.getSellerId())
                 .stockQuantity(entity.getStockQuantity())
                 .minStockLevel(entity.getMinStockLevel())
-                .images(entity.getImages())
+                .images(entity.getImages() != null ? new ArrayList<>(entity.getImages()) : Collections.emptyList())
                 .thumbnail(entity.getThumbnail())
                 .rating(entity.getRating())
                 .reviewCount(entity.getReviewCount())
@@ -56,7 +49,7 @@ public class ProductMapper {
                 .isOnSale(entity.getIsOnSale())
                 .isRentable(entity.getIsRentable())
                 .rentalPricePerDay(entity.getRentalPricePerDay())
-                .tags(entity.getTags())
+                .tags(entity.getTags() != null ? new ArrayList<>(entity.getTags()) : Collections.emptyList())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -67,16 +60,12 @@ public class ProductMapper {
         return entities.stream().map(this::toProductResponse).collect(Collectors.toList());
     }
 
-    // ── Category Mapping ──────────────────────────────────────────────────────
-
     public CategoryResponse toCategoryResponse(Category entity) {
         if (entity == null) return null;
 
-        // FIX: Guard parent proxy access
         Category parent = entity.getParent();
         boolean parentLoaded = parent != null && Hibernate.isInitialized(parent);
 
-        // FIX: Only call .size() if the collection is initialized
         int productCount = 0;
         if (entity.getProducts() != null && Hibernate.isInitialized(entity.getProducts())) {
             productCount = entity.getProducts().size();
@@ -103,12 +92,9 @@ public class ProductMapper {
         return entities.stream().map(this::toCategoryResponse).collect(Collectors.toList());
     }
 
-    // ── Review Mapping ────────────────────────────────────────────────────────
-
     public ReviewResponse toReviewResponse(ProductReview entity) {
         if (entity == null) return null;
 
-        // FIX: Guard product proxy on review
         Product product = entity.getProduct();
         boolean productLoaded = product != null && Hibernate.isInitialized(product);
 

@@ -9,7 +9,9 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -66,8 +68,6 @@ public class Product {
     @Size(max = 100)
     private String brand;
 
-    // FIX : category est LAZY, @JsonIgnoreProperties casse la boucle
-    // Product -> category -> products (ignoré) -> OK
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     @JsonIgnoreProperties({"subcategories", "products", "parent", "hibernateLazyInitializer", "handler"})
@@ -91,11 +91,12 @@ public class Product {
     @Builder.Default
     private Boolean trackInventory = true;
 
+    // FIX: List -> Set pour éviter MultipleBagFetchException
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_images", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "image_url")
     @Builder.Default
-    private List<String> images = new ArrayList<>();
+    private Set<String> images = new HashSet<>();
 
     @Size(max = 500)
     private String thumbnail;
@@ -141,15 +142,13 @@ public class Product {
     @Size(max = 100)
     private String dimensions;
 
+    // FIX: List -> Set pour éviter MultipleBagFetchException
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "product_tags", joinColumns = @JoinColumn(name = "product_id"))
     @Column(name = "tag")
     @Builder.Default
-    private List<String> tags = new ArrayList<>();
+    private Set<String> tags = new HashSet<>();
 
-    // FIX : @JsonIgnore sur reviews dans Product pour casser la boucle
-    // Product -> reviews -> ProductReview -> product (ignoré) -> OK
-    // Les reviews sont exposées via leur propre endpoint, pas via Product directement
     @JsonIgnore
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @Builder.Default

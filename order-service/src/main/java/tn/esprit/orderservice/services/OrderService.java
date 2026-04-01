@@ -22,20 +22,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/**
- * Order Service - migrated from monolith with added Kafka event publishing.
- *
- * Kafka Events Published:
- * - order.created: When a new order is placed from cart
- * - order.completed: When order status becomes DELIVERED
- * - order.cancelled: When order is cancelled (triggers stock restoration in Product Service)
- *
- * Key Changes from Monolith:
- * - No direct UserService/ProductRepository dependency
- * - Uses CartService for cart operations
- * - Product data is read from denormalized CartItem fields
- * - User ID comes from API Gateway headers
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -67,18 +53,48 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with number: " + orderNumber));
     }
 
-    /**
-     * Create an order from the user's cart.
-     * Product data is taken from the denormalized CartItem fields.
-     * After creation, a Kafka event is published so Product Service can decrement stock.
-     */
-    @Transactional
+    // ✅ Méthode publique SANS @Transactional — Kafka publié APRÈS le commit
     public Order createOrderFromCart(UUID userId, String userEmail,
                                      String shippingName, String shippingPhone,
                                      String shippingAddress, String shippingCity,
                                      String shippingPostalCode, String shippingCountry,
                                      String paymentMethod, String notes) {
+
+        // 1. Sauvegarder l'order dans une transaction séparée (commit immédiat)
+        Order savedOrder = createOrderInTransaction(
+                userId, userEmail,
+                shippingName, shippingPhone,
+                shippingAddress, shippingCity,
+                shippingPostalCode, shippingCountry,
+                paymentMethod, notes
+        );
+
+        // 2. Publier l'event Kafka APRÈS le commit JPA
+        try {
+            OrderEvent event = buildOrderEvent(savedOrder);
+            eventPublisher.publishOrderCreated(event);
+            log.info("Order created and event published: {} ({})", savedOrder.getOrderNumber(), savedOrder.getId());
+        } catch (Exception e) {
+            // Ne pas faire échouer la commande si Kafka est down
+            log.error("Failed to publish Kafka event for order {}, but order was saved successfully: {}",
+                    savedOrder.getOrderNumber(), e.getMessage());
+        }
+
+        return savedOrder;
+    }
+
+    // ✅ Transaction isolée — commit avant retour
+    @Transactional
+    public Order createOrderInTransaction(UUID userId, String userEmail,
+                                          String shippingName, String shippingPhone,
+                                          String shippingAddress, String shippingCity,
+                                          String shippingPostalCode, String shippingCountry,
+                                          String paymentMethod, String notes) {
+
+        log.info("Creating order for userId={}", userId);
+
         Cart cart = cartService.getCartByUserId(userId);
+        log.info("Cart found: {} items", cart.getItems() != null ? cart.getItems().size() : 0);
 
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             throw new BusinessException("Cart is empty. Cannot create order.");
@@ -91,11 +107,10 @@ public class OrderService {
             BigDecimal itemPrice = cartItem.getPrice() != null ? cartItem.getPrice() : BigDecimal.ZERO;
             BigDecimal lineTotal = itemPrice.multiply(BigDecimal.valueOf(cartItem.getQuantity()));
 
-            // Create order item with denormalized product snapshot data
             OrderItem orderItem = OrderItem.builder()
                     .productId(cartItem.getProductId())
                     .productName(cartItem.getProductName())
-                    .productSku(null) // Will be filled if available
+                    .productSku(null)
                     .productThumbnail(cartItem.getProductThumbnail())
                     .quantity(cartItem.getQuantity())
                     .unitPrice(itemPrice)
@@ -136,29 +151,22 @@ public class OrderService {
                 .notes(notes)
                 .build();
 
-        order = orderRepository.save(order);
-
-        // Link items to order
+        // Lier les items à l'order AVANT le save
         for (OrderItem item : orderItems) {
             item.setOrder(order);
         }
         order.setItems(orderItems);
-        order = orderRepository.save(order);
 
-        // Clear the cart after successful order creation
+        Order saved = orderRepository.save(order);
+        log.info("Order saved successfully: {} ({})", saved.getOrderNumber(), saved.getId());
+
+        // Clear cart dans la même transaction
         cartService.clearCart(userId);
+        log.info("Cart cleared for userId={}", userId);
 
-        // Publish Kafka event - Product Service will decrement stock
-        OrderEvent event = buildOrderEvent(order);
-        eventPublisher.publishOrderCreated(event);
-        log.info("Order created and event published: {} ({})", order.getOrderNumber(), order.getId());
-
-        return order;
+        return saved;
     }
 
-    /**
-     * Update order status. Publishes events for completed/cancelled orders.
-     */
     @Transactional
     public Order updateOrderStatus(UUID orderId, OrderStatus status) {
         Order order = getOrderById(orderId);
@@ -170,18 +178,24 @@ public class OrderService {
                 break;
             case DELIVERED:
                 order.setDeliveredAt(LocalDateTime.now());
-                // Publish order.completed event
-                OrderEvent completedEvent = buildOrderEvent(order);
-                eventPublisher.publishOrderCompleted(completedEvent);
-                log.info("Order completed event published: {}", order.getOrderNumber());
-                break;
+                Order deliveredOrder = orderRepository.save(order);
+                try {
+                    eventPublisher.publishOrderCompleted(buildOrderEvent(deliveredOrder));
+                    log.info("Order completed event published: {}", deliveredOrder.getOrderNumber());
+                } catch (Exception e) {
+                    log.error("Failed to publish completed event: {}", e.getMessage());
+                }
+                return deliveredOrder;
             case CANCELLED:
                 order.setCancelledAt(LocalDateTime.now());
-                // Publish order.cancelled event - Product Service will restore stock
-                OrderEvent cancelledEvent = buildOrderEvent(order);
-                eventPublisher.publishOrderCancelled(cancelledEvent);
-                log.info("Order cancelled event published: {}", order.getOrderNumber());
-                break;
+                Order cancelledOrder = orderRepository.save(order);
+                try {
+                    eventPublisher.publishOrderCancelled(buildOrderEvent(cancelledOrder));
+                    log.info("Order cancelled event published: {}", cancelledOrder.getOrderNumber());
+                } catch (Exception e) {
+                    log.error("Failed to publish cancelled event: {}", e.getMessage());
+                }
+                return cancelledOrder;
             default:
                 break;
         }
@@ -208,21 +222,21 @@ public class OrderService {
 
     private BigDecimal calculateShippingCost(BigDecimal subtotal) {
         if (subtotal.compareTo(BigDecimal.valueOf(100)) >= 0) {
-            return BigDecimal.ZERO; // Free shipping for orders over 100
+            return BigDecimal.ZERO;
         }
-        return BigDecimal.valueOf(7); // Fixed shipping cost
+        return BigDecimal.valueOf(7);
     }
 
     private OrderEvent buildOrderEvent(Order order) {
         List<OrderEvent.OrderItemEvent> itemEvents = order.getItems() != null
                 ? order.getItems().stream()
-                    .map(item -> OrderEvent.OrderItemEvent.builder()
-                            .productId(item.getProductId() != null ? item.getProductId().toString() : null)
-                            .productName(item.getProductName())
-                            .quantity(item.getQuantity())
-                            .unitPrice(item.getUnitPrice())
-                            .build())
-                    .collect(Collectors.toList())
+                .map(item -> OrderEvent.OrderItemEvent.builder()
+                        .productId(item.getProductId() != null ? item.getProductId().toString() : null)
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .unitPrice(item.getUnitPrice())
+                        .build())
+                .collect(Collectors.toList())
                 : new ArrayList<>();
 
         return OrderEvent.builder()

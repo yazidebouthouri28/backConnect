@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import tn.esprit.orderservice.dto.ProductDTO;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.UUID;
 
@@ -29,10 +31,21 @@ public class ProductServiceClient {
      */
     public ProductDTO getProduct(UUID productId) {
         try {
-            // The Product Service returns ApiResponse<ProductResponse>
-            // We extract from the nested 'data' field
-            var response = webClient.get()
-                    .uri("/api/products/{id}", productId)
+            // Récupère le token du contexte de la requête courante
+            String authHeader = null;
+            var request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes());
+            if (request != null) {
+                authHeader = request.getRequest().getHeader("Authorization");
+            }
+
+            var requestSpec = webClient.get()
+                    .uri("/api/products/{id}", productId);
+
+            if (authHeader != null) {
+                requestSpec = requestSpec.header("Authorization", authHeader);
+            }
+
+            var response = requestSpec
                     .retrieve()
                     .bodyToMono(ProductApiResponse.class)
                     .block();

@@ -40,8 +40,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
             countQuery = "SELECT count(p) FROM Product p WHERE p.category.id = :categoryId")
     Page<Product> findByCategoryId(@Param("categoryId") UUID categoryId, Pageable pageable);
 
-    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.sellerId = :sellerId",
-            countQuery = "SELECT count(p) FROM Product p WHERE p.sellerId = :sellerId")
+    @Query(value = "SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.sellerId = :sellerId AND p.isActive = true",
+            countQuery = "SELECT count(p) FROM Product p WHERE p.sellerId = :sellerId AND p.isActive = true")
     Page<Product> findBySellerId(@Param("sellerId") UUID sellerId, Pageable pageable);
 
     @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.isFeatured = true AND p.isActive = true")
@@ -74,7 +74,12 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     // ── FIX: findById override with JOIN FETCH ────────────────────────────────
     // The default JpaRepository.findById() does NOT fetch category eagerly.
     // This override ensures getProductById() in the service also gets category loaded.
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.category WHERE p.id = :id")
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN FETCH p.category c " +
+            "LEFT JOIN FETCH c.parent " +
+            "LEFT JOIN FETCH p.images " +
+            "LEFT JOIN FETCH p.tags " +
+            "WHERE p.id = :id")
     Optional<Product> findByIdWithCategory(@Param("id") UUID id);
 
     Optional<Product> findBySku(String sku);

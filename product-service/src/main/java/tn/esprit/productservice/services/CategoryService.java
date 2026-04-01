@@ -101,8 +101,7 @@ public class CategoryService {
     @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(UUID id) {
         Category category = getCategoryById(id);
-        category.setIsActive(false);
-        categoryRepository.save(category);
-        log.info("Category soft-deleted: {} ({})", category.getName(), category.getId());
+        categoryRepository.delete(category);
+        log.info("Category hard-deleted: {} ({})", category.getName(), category.getId());
     }
 }

@@ -3,7 +3,6 @@ package tn.esprit.orderservice.services;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.orderservice.dto.ProductDTO;
@@ -24,6 +23,8 @@ import java.util.UUID;
  * - Uses ProductServiceClient (WebClient) to fetch product data instead of direct Product entity access
  * - Uses productId (UUID) instead of Product entity references
  * - Denormalizes product name and thumbnail into CartItem for display
+ * - Removed @Cacheable on getCartByUserId to prevent LazyInitializationException
+ *   (caching JPA entities with lazy collections is unsafe outside a Hibernate session)
  */
 @Slf4j
 @Service
@@ -34,7 +35,8 @@ public class CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductServiceClient productServiceClient;
 
-    @Cacheable(value = "cart", key = "#userId")
+    // @Cacheable removed — lazy collections cause LazyInitializationException when accessed from cache
+    @Transactional(readOnly = true)
     public Cart getCartByUserId(UUID userId) {
         return cartRepository.findByUserId(userId)
                 .orElseGet(() -> {

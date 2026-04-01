@@ -16,6 +16,7 @@ import tn.esprit.productservice.mapper.ProductMapper;
 import tn.esprit.productservice.services.ProductService;
 
 import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
@@ -185,15 +186,14 @@ public class ProductController {
                 .minStockLevel(request.getMinStockLevel())
                 .maxStockLevel(request.getMaxStockLevel())
                 .trackInventory(request.getTrackInventory())
-                .images(request.getImages())
-                .thumbnail(request.getThumbnail())
+                .images(request.getImages() != null ? new HashSet<>(request.getImages()) : new HashSet<>())
+                .tags(request.getTags() != null ? new HashSet<>(request.getTags()) : new HashSet<>())                .thumbnail(request.getThumbnail())
                 .isFeatured(request.getIsFeatured())
                 .isOnSale(request.getIsOnSale())
                 .isRentable(request.getIsRentable())
                 .rentalPricePerDay(request.getRentalPricePerDay())
                 .weight(request.getWeight())
                 .dimensions(request.getDimensions())
-                .tags(request.getTags())
                 .build();
     }
 }

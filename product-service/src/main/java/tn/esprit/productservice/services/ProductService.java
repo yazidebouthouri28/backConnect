@@ -47,7 +47,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "product-detail", key = "#id")
+//    @Cacheable(value = "product-detail", key = "#id")
     public Product getProductById(UUID id) {
         return productRepository.findByIdWithCategory(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
@@ -201,13 +201,13 @@ public class ProductService {
     })
     public void deleteProduct(UUID id) {
         Product product = getProductById(id);
-        product.setIsActive(false);
-        productRepository.save(product);
 
         publishEvent(() -> {
             ProductEvent event = buildProductEvent(product);
             eventPublisher.publishProductDeleted(event);
         }, "product.deleted", product.getId());
+
+        productRepository.deleteById(id);  // ✅ Hard delete
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
