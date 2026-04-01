@@ -1,224 +1,92 @@
 pipeline {
-
     agent any
-
     environment {
-        DOCKER_USERNAME = 'azizbenabdallah'
-        DOCKER_CREDENTIALS = 'docker-hub-credentials'
-
-        USER_SERVICE    = 'user-service'
-        PRODUCT_SERVICE = 'product-service'
-        ORDER_SERVICE   = 'order-service'
-        API_GATEWAY     = 'api-gateway'
-
-        DOCKER_BUILDKIT = "1"
-        MAVEN_OPTS      = "-Dmaven.repo.local=${WORKSPACE}/.m2/repository"
+        DOCKER_IMAGE_TAG = "17-${env.BUILD_ID}"
+        MVN_OPTS = "-B -Dmaven.repo.local=$WORKSPACE/.m2/repository"
     }
-
     options {
-        timeout(time: 2, unit: 'HOURS')
-        disableConcurrentBuilds()
-        buildDiscarder(logRotator(numToKeepStr: '10'))
         timestamps()
+        ansiColor('xterm')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        timeout(time: 30, unit: 'MINUTES')
     }
-
     stages {
 
         stage('Checkout') {
             steps {
                 checkout scm
-                script {
-                    env.GIT_COMMIT_SHORT = sh(
-                        script: 'git rev-parse --short HEAD',
-                        returnStdout: true
-                    ).trim()
+            }
+        }
 
-                    env.IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT_SHORT}"
+        stage('Build & Package Services') {
+            parallel {
+                stage('Product Service') {
+                    steps {
+                        dir('product-service') {
+                            sh 'chmod +x mvnw'
+                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        }
+                    }
+                }
+                stage('Order Service') {
+                    steps {
+                        dir('order-service') {
+                            sh 'chmod +x mvnw'
+                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        }
+                    }
+                }
+                stage('API Gateway') {
+                    steps {
+                        dir('api-gateway') {
+                            sh 'chmod +x mvnw'
+                            sh "./mvnw clean package -DskipTests $MVN_OPTS"
+                        }
+                    }
                 }
             }
         }
 
-        stage('Prepare Maven Wrapper') {
+        stage('Docker Build Images') {
             steps {
                 sh '''
-                for dir in user-service product-service order-service api-gateway
-                do
-                  if [ -f $dir/mvnw ]; then
-                    chmod +x $dir/mvnw
-                  fi
-                done
+                docker-compose -f docker-compose.yml build --parallel
                 '''
             }
         }
 
-        stage('Build Microservices') {
-
-            failFast false
-
-            parallel {
-
-                stage('Build user-service') {
-                    steps {
-                        dir('user-service') {
-                            sh './mvnw -B clean package -DskipTests'
-                        }
-                    }
-                }
-
-                stage('Build product-service') {
-                    steps {
-                        dir('product-service') {
-                            sh './mvnw -B clean package -DskipTests'
-                        }
-                    }
-                }
-
-                stage('Build order-service') {
-                    steps {
-                        dir('order-service') {
-                            sh './mvnw -B clean package -DskipTests'
-                        }
-                    }
-                }
-
-                stage('Build api-gateway') {
-                    steps {
-                        dir('api-gateway') {
-                            sh './mvnw -B clean package -DskipTests'
-                        }
-                    }
-                }
-
-            }
-        }
-
-        stage('Build Docker Images') {
-
-            failFast false
-
-            parallel {
-
-                stage('Docker user-service') {
-                    steps {
-                        dir('user-service') {
-                            sh "docker build -t ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${USER_SERVICE}:latest ."
-                        }
-                    }
-                }
-
-                stage('Docker product-service') {
-                    steps {
-                        dir('product-service') {
-                            sh "docker build -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest ."
-                        }
-                    }
-                }
-
-                stage('Docker order-service') {
-                    steps {
-                        dir('order-service') {
-                            sh "docker build -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest ."
-                        }
-                    }
-                }
-
-                stage('Docker api-gateway') {
-                    steps {
-                        dir('api-gateway') {
-                            sh "docker build -t ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG} -t ${DOCKER_USERNAME}/${API_GATEWAY}:latest ."
-                        }
-                    }
-                }
-
-            }
-        }
-
-        stage('Push Images') {
-
-            steps {
-
-                script {
-
-                    docker.withRegistry('', DOCKER_CREDENTIALS) {
-
-                        parallel(
-
-                            "Push user-service": {
-                                sh "docker push ${DOCKER_USERNAME}/${USER_SERVICE}:${IMAGE_TAG}"
-                                sh "docker push ${DOCKER_USERNAME}/${USER_SERVICE}:latest"
-                            },
-
-                            "Push product-service": {
-                                sh "docker push ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:${IMAGE_TAG}"
-                                sh "docker push ${DOCKER_USERNAME}/${PRODUCT_SERVICE}:latest"
-                            },
-
-                            "Push order-service": {
-                                sh "docker push ${DOCKER_USERNAME}/${ORDER_SERVICE}:${IMAGE_TAG}"
-                                sh "docker push ${DOCKER_USERNAME}/${ORDER_SERVICE}:latest"
-                            },
-
-                            "Push api-gateway": {
-                                sh "docker push ${DOCKER_USERNAME}/${API_GATEWAY}:${IMAGE_TAG}"
-                                sh "docker push ${DOCKER_USERNAME}/${API_GATEWAY}:latest"
-                            }
-
-                        )
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Kubernetes') {
-
+        stage('Push Docker Images') {
             when {
-                branch 'main'
+                expression { return env.BRANCH_NAME == 'main' }
             }
-
             steps {
-
-                timeout(time: 10, unit: 'MINUTES') {
-                    input message: 'Deploy to Kubernetes ?', ok: 'Deploy'
-                }
-
                 script {
-
-                    def services = [
-                        USER_SERVICE,
-                        PRODUCT_SERVICE,
-                        ORDER_SERVICE,
-                        API_GATEWAY
-                    ]
-
-                    for (svc in services) {
-
-                        sh "kubectl set image deployment/${svc} ${svc}=${DOCKER_USERNAME}/${svc}:${IMAGE_TAG} -n ecommerce"
-
-                        sh "kubectl rollout status deployment/${svc} -n ecommerce"
-                    }
+                    sh 'echo $DOCKER_HUB_PASS | docker login -u $DOCKER_HUB_USER --password-stdin'
+                    sh 'docker-compose -f docker-compose.yml push || true'
                 }
             }
         }
 
+        stage('Deploy to Kubernetes') {
+            when {
+                expression { return env.BRANCH_NAME == 'main' }
+            }
+            steps {
+                sh 'kubectl apply -f k8s/'
+            }
+        }
     }
 
     post {
-
         always {
             archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
-            sh 'docker image prune -f || true'
-        }
-
-        success {
-            echo 'Pipeline SUCCESS'
-        }
-
-        failure {
-            echo 'Pipeline FAILED'
-        }
-
-        cleanup {
             cleanWs()
+        }
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check the logs!"
         }
     }
 }

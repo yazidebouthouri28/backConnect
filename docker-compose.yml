@@ -1,3 +1,5 @@
+version: '3.9'
+
 services:
   # ============================================================
   # DATABASES
@@ -124,18 +126,17 @@ services:
       kafka:
         condition: service_healthy
     entrypoint: /bin/sh -c
-    command:
-      - |
-        echo 'Creating Kafka topics...'
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.created
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.updated
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.deleted
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.created
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.completed
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.cancelled
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic inventory.low-stock
-        kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic payment.processed
-        echo 'Kafka topics created successfully!'
+    command: |
+      echo 'Creating Kafka topics...'
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.created
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.updated
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic product.deleted
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.created
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.completed
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic order.cancelled
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic inventory.low-stock
+      kafka-topics --create --if-not-exists --bootstrap-server kafka:29092 --replication-factor 1 --partitions 3 --topic payment.processed
+      echo 'Kafka topics created successfully!'
     networks:
       - ecommerce-network
 
@@ -147,14 +148,14 @@ services:
     container_name: ecommerce-n8n
     restart: unless-stopped
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin123
-      - N8N_HOST=localhost
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://localhost:5678/
-      - GENERIC_TIMEZONE=Africa/Lagos
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: admin
+      N8N_BASIC_AUTH_PASSWORD: admin123
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      GENERIC_TIMEZONE: Africa/Lagos
     ports:
       - "5678:5678"
     volumes:
@@ -172,16 +173,20 @@ services:
     container_name: ecommerce-api-gateway
     restart: unless-stopped
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - JWT_SECRET=YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!
-      - PRODUCT_SERVICE_URL=http://product-service:8082
-      - ORDER_SERVICE_URL=http://order-service:8083
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: YourSuperSecretKeyForJWTTokenGenerationMustBeAtLeast256BitsLong!!
+      PRODUCT_SERVICE_URL: http://product-service:8082
+      ORDER_SERVICE_URL: http://order-service:8083
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8090:8080"
     depends_on:
       redis:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
         condition: service_healthy
     networks:
       - ecommerce-network
@@ -196,15 +201,15 @@ services:
     container_name: ecommerce-product-service
     restart: unless-stopped
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - DB_HOST=product-db
-      - DB_PORT=3306
-      - DB_NAME=product_db
-      - DB_USERNAME=root
-      - DB_PASSWORD=
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: product-db
+      DB_PORT: 3306
+      DB_NAME: product_db
+      DB_USERNAME: root
+      DB_PASSWORD: ""
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     ports:
       - "8082:8082"
     depends_on:
@@ -224,16 +229,16 @@ services:
     container_name: ecommerce-order-service
     restart: unless-stopped
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - DB_HOST=order-db
-      - DB_PORT=3306
-      - DB_NAME=order_db
-      - DB_USERNAME=root
-      - DB_PASSWORD=
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:29092
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - PRODUCT_SERVICE_URL=http://product-service:8082
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: order-db
+      DB_PORT: 3306
+      DB_NAME: order_db
+      DB_USERNAME: root
+      DB_PASSWORD: ""
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      PRODUCT_SERVICE_URL: http://product-service:8082
     ports:
       - "8083:8083"
     depends_on:
@@ -252,23 +257,15 @@ services:
 networks:
   ecommerce-network:
     driver: bridge
-    name: ecommerce-network
 
 # ============================================================
 # VOLUMES
 # ============================================================
 volumes:
   product_db_data:
-    name: ecommerce-product-db-data
   order_db_data:
-    name: ecommerce-order-db-data
   redis_data:
-    name: ecommerce-redis-data
   zookeeper_data:
-    name: ecommerce-zookeeper-data
   zookeeper_log:
-    name: ecommerce-zookeeper-log
   kafka_data:
-    name: ecommerce-kafka-data
   n8n_data:
-    name: ecommerce-n8n-data
