@@ -1,6 +1,8 @@
 def SERVICES = [
-    [name: 'api-gateway',     deployment: 'deployment/api-gateway'],
+    [name: 'api-gateway', deployment: 'deployment/api-gateway']
 ]
+
+def REPO_DIR = '/home/vagrant/projet-backend'
 
 pipeline {
     agent any
@@ -10,14 +12,14 @@ pipeline {
         DOCKER_USER         = "azizbenabdallah"
         DOCKER_PASS         = "jc-i5jxUL\$H36N4"
         DOCKER_IMAGE_TAG    = "${BUILD_NUMBER}"
-        MVN_OPTS            = "-T 1C -B -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
-        K8S_ROLLOUT_TIMEOUT = "240m"             // ✅ 4h
+        MVN_OPTS            = "-T 1C -B -Dmaven.repo.local=/home/vagrant/.m2/repository -Dmaven.wagon.http.retryHandler.count=5 -Dmaven.wagon.httpconnectionManager.ttlSeconds=120 -Dmaven.wagon.http.pool=false"
+        K8S_ROLLOUT_TIMEOUT = "240m"
     }
 
     options {
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 2, unit: 'HOURS')          // ✅ 2h global
+        timeout(time: 2, unit: 'HOURS')
         skipStagesAfterUnstable()
     }
 
@@ -25,23 +27,9 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                retry(3) {
-                    checkout([
-                        $class: 'GitSCM',
-                        branches: [[name: '*/AzizBack']],
-                        extensions: [
-                            [$class: 'CloneOption',
-                                depth: 1,
-                                shallow: true,
-                                noTags: true,
-                                timeout: 60
-                            ],
-                            [$class: 'CleanBeforeCheckout']
-                        ],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/yazidebouthouri28/Esprit-PI-4SE3-2025-2026-ConnectCamp-Backend.git'
-                        ]]
-                    ])
+                dir("${REPO_DIR}") {
+                    sh 'git fetch --depth 1 origin AzizBack'
+                    sh 'git reset --hard origin/AzizBack'
                 }
             }
         }
@@ -52,10 +40,12 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Maven › ${service.name}": {
-                            timeout(time: 60, unit: 'MINUTES') {  // ✅ 1h
-                                dir(service.name) {
+                            timeout(time: 60, unit: 'MINUTES') {
+                                dir("${REPO_DIR}/${service.name}") {
                                     sh 'chmod +x mvnw'
-                                    sh "./mvnw clean package -DskipTests ${MVN_OPTS}"
+                                    retry(3) {
+                                        sh "./mvnw clean package -DskipTests ${MVN_OPTS}"
+                                    }
                                 }
                             }
                         }]
@@ -65,7 +55,6 @@ pipeline {
         }
 
         stage('Docker Build & Push') {
-            when { branch 'AzizBack' }
             steps {
                 script {
                     sh "docker login -u ${DOCKER_USER} -p '${DOCKER_PASS}'"
@@ -73,12 +62,12 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Docker › ${service.name}": {
-                            timeout(time: 60, unit: 'MINUTES') {  // ✅ 1h
+                            timeout(time: 60, unit: 'MINUTES') {
                                 sh """
                                     docker build \
                                         -t ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG} \
                                         -t ${DOCKER_REPO}-${service.name}:latest \
-                                        ./${service.name}
+                                        ${REPO_DIR}/${service.name}
                                 """
                                 retry(3) {
                                     sh """
@@ -96,15 +85,14 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            when { branch 'AzizBack' }
             steps {
                 script {
-                    sh 'kubectl apply -f k8s/'
+                    sh "kubectl apply -f ${REPO_DIR}/k8s/"
 
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Rollout › ${service.name}": {
-                            timeout(time: 30, unit: 'MINUTES') {  // ✅ 30min
+                            timeout(time: 30, unit: 'MINUTES') {
                                 try {
                                     sh "kubectl rollout status ${service.deployment} --timeout=${K8S_ROLLOUT_TIMEOUT}"
                                 } catch (err) {
@@ -122,8 +110,7 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
-            cleanWs()
+            archiveArtifacts artifacts: "${REPO_DIR}/**/target/*.jar", allowEmptyArchive: true
         }
         success {
             echo "✅ Build ${BUILD_NUMBER} terminé → tag: ${DOCKER_IMAGE_TAG}"
