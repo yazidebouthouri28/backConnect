@@ -1,7 +1,8 @@
 def SERVICES = [
     [name: 'product-service', deployment: 'deployment/product-service'],
     [name: 'order-service',   deployment: 'deployment/order-service'],
-    [name: 'api-gateway',     deployment: 'deployment/api-gateway']
+    [name: 'api-gateway',     deployment: 'deployment/api-gateway'],
+     [name: 'user-service',    deployment: 'deployment/user-service']
 ]
 
 pipeline {
@@ -11,7 +12,7 @@ pipeline {
         DOCKER_REPO         = "azizbenabdallah/ecommerceback"
         DOCKER_USER         = "azizbenabdallah"
         DOCKER_PASS         = "jc-i5jxUL\$H36N4"
-        DOCKER_IMAGE_TAG    = "${env.BUILD_NUMBER}"
+        DOCKER_IMAGE_TAG    = "${BUILD_NUMBER}"
         MVN_OPTS            = "-T 1C -B -ntp -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
         K8S_ROLLOUT_TIMEOUT = "180s"
     }
@@ -25,27 +26,31 @@ pipeline {
 
     stages {
 
+        // ── 1. Checkout shallow ─────────────────────────────────
         stage('Checkout') {
             steps {
-                deleteDir()
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/AzizBack']],
-                    extensions: [
-                        [$class: 'CloneOption',
-                            depth: 1,
-                            shallow: true,
-                            noTags: true,
-                            timeout: 20
-                        ]
-                    ],
-                    userRemoteConfigs: [[
-                        url: 'https://github.com/yazidebouthouri28/Esprit-PI-4SE3-2025-2026-ConnectCamp-Backend.git'
-                    ]]
-                ])
+                retry(3) {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: '*/AzizBack']],
+                        extensions: [
+                            [$class: 'CloneOption',
+                                depth: 1,
+                                shallow: true,
+                                noTags: true,
+                                timeout: 60
+                            ],
+                            [$class: 'CleanBeforeCheckout']
+                        ],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/yazidebouthouri28/Esprit-PI-4SE3-2025-2026-ConnectCamp-Backend.git'
+                        ]]
+                    ])
+                }
             }
         }
 
+        // ── 2. Build Maven parallèle ────────────────────────────
         stage('Build & Package') {
             steps {
                 script {
@@ -64,7 +69,9 @@ pipeline {
             }
         }
 
+        // ── 3. Docker Build & Push parallèle ───────────────────
         stage('Docker Build & Push') {
+            when { branch 'AzizBack' }
             steps {
                 script {
                     sh "docker login -u ${DOCKER_USER} -p '${DOCKER_PASS}'"
@@ -75,13 +82,13 @@ pipeline {
                             timeout(time: 10, unit: 'MINUTES') {
                                 sh """
                                     docker build \
-                                        -t ${DOCKER_REPO}-${service.name}:${BUILD_NUMBER} \
+                                        -t ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG} \
                                         -t ${DOCKER_REPO}-${service.name}:latest \
                                         ./${service.name}
                                 """
                                 retry(3) {
                                     sh """
-                                        docker push ${DOCKER_REPO}-${service.name}:${BUILD_NUMBER}
+                                        docker push ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG}
                                         docker push ${DOCKER_REPO}-${service.name}:latest
                                     """
                                 }
@@ -94,7 +101,9 @@ pipeline {
             }
         }
 
+        // ── 4. Deploy Kubernetes ────────────────────────────────
         stage('Deploy to Kubernetes') {
+            when { branch 'AzizBack' }
             steps {
                 script {
                     sh 'kubectl apply -f k8s/'
@@ -124,7 +133,7 @@ pipeline {
             cleanWs()
         }
         success {
-            echo "✅ Build ${BUILD_NUMBER} terminé avec succès"
+            echo "✅ Build ${BUILD_NUMBER} terminé → tag: ${DOCKER_IMAGE_TAG}"
         }
         failure {
             echo "❌ Build ${BUILD_NUMBER} échoué"
