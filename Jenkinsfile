@@ -1,3 +1,4 @@
+```groovy
 // ============================================================
 //  Configuration centrale
 // ============================================================
@@ -14,8 +15,7 @@ pipeline {
         DOCKER_REPO         = "azizbenabdallah/ecommerceback"
         DOCKER_USER         = "azizbenabdallah"
         DOCKER_PASS         = "jc-i5jxUL\$H36N4"
-        DOCKER_IMAGE_TAG    = "${env.BRANCH_NAME ?: 'local'}-${BUILD_NUMBER}"
-        GIT_SHORT_COMMIT    = "${env.GIT_COMMIT?.take(7) ?: 'unknown'}"
+        DOCKER_IMAGE_TAG    = "${env.BUILD_NUMBER}"
         MVN_OPTS            = "-T 1C -B -ntp -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
         K8S_ROLLOUT_TIMEOUT = "180s"
     }
@@ -29,10 +29,33 @@ pipeline {
 
     stages {
 
+        // ============================================================
+        // CHECKOUT RAPIDE (shallow clone)
+        // ============================================================
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                deleteDir()
+                checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/AzizBack']],
+                    extensions: [
+                        [$class: 'CloneOption',
+                            depth: 1,
+                            shallow: true,
+                            noTags: true,
+                            timeout: 20
+                        ]
+                    ],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/yazidebouthouri28/Esprit-PI-4SE3-2025-2026-ConnectCamp-Backend.git'
+                    ]]
+                ])
+            }
         }
 
+        // ============================================================
+        // BUILD MAVEN PARALLELE
+        // ============================================================
         stage('Build & Package') {
             steps {
                 script {
@@ -51,55 +74,68 @@ pipeline {
             }
         }
 
+        // ============================================================
+        // DOCKER BUILD + PUSH
+        // ============================================================
         stage('Docker Build & Push') {
             steps {
                 script {
+
                     sh "docker login -u ${DOCKER_USER} -p '${DOCKER_PASS}'"
 
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Docker › ${service.name}": {
+
                             timeout(time: 10, unit: 'MINUTES') {
+
                                 sh """
-                                    docker build \
-                                        --cache-from ${DOCKER_REPO}-${service.name}:latest \
-                                        --build-arg BUILD_NUMBER=${BUILD_NUMBER} \
-                                        --build-arg BRANCH=${env.BRANCH_NAME ?: 'local'} \
-                                        --label git-commit=${GIT_SHORT_COMMIT} \
-                                        --label build-date=\$(date -u +%Y-%m-%dT%H:%M:%SZ) \
-                                        -t ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG} \
-                                        -t ${DOCKER_REPO}-${service.name}:latest \
-                                        ./${service.name}
+                                docker build \
+                                -t ${DOCKER_REPO}-${service.name}:${BUILD_NUMBER} \
+                                -t ${DOCKER_REPO}-${service.name}:latest \
+                                ./${service.name}
                                 """
+
                                 retry(3) {
                                     sh """
-                                        docker push ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG}
-                                        docker push ${DOCKER_REPO}-${service.name}:latest
+                                    docker push ${DOCKER_REPO}-${service.name}:${BUILD_NUMBER}
+                                    docker push ${DOCKER_REPO}-${service.name}:latest
                                     """
                                 }
+
                             }
                         }]
                     }
+
+                    sh "docker logout || true"
                 }
             }
         }
 
+        // ============================================================
+        // DEPLOY KUBERNETES
+        // ============================================================
         stage('Deploy to Kubernetes') {
-            when { branch 'main' }
             steps {
                 script {
-                    sh 'kubectl config current-context'
+
                     sh 'kubectl apply -f k8s/'
 
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Rollout › ${service.name}": {
+
                             timeout(time: 5, unit: 'MINUTES') {
+
                                 try {
+
                                     sh "kubectl rollout status ${service.deployment} --timeout=${K8S_ROLLOUT_TIMEOUT}"
+
                                 } catch (err) {
-                                    echo "⚠️ Rollout échoué pour ${service.name} — rollback..."
+
+                                    echo "⚠️ Rollout échoué pour ${service.name}"
                                     sh "kubectl rollout undo ${service.deployment}"
+
                                     error("Rollback déclenché : ${service.name}")
                                 }
                             }
@@ -110,17 +146,23 @@ pipeline {
         }
     }
 
+    // ============================================================
+    // POST ACTIONS
+    // ============================================================
     post {
+
         always {
             archiveArtifacts artifacts: '**/target/*.jar', allowEmptyArchive: true
-            sh 'docker logout || true'
             cleanWs()
         }
+
         success {
-            echo "✅ [${env.BRANCH_NAME ?: 'local'}] #${BUILD_NUMBER} → ${DOCKER_IMAGE_TAG}"
+            echo "✅ Build ${BUILD_NUMBER} terminé avec succès"
         }
+
         failure {
-            echo "❌ [${env.BRANCH_NAME ?: 'local'}] #${BUILD_NUMBER} échoué."
+            echo "❌ Build ${BUILD_NUMBER} échoué"
         }
     }
 }
+```
