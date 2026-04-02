@@ -2,7 +2,7 @@ def SERVICES = [
     [name: 'product-service', deployment: 'deployment/product-service'],
     [name: 'order-service',   deployment: 'deployment/order-service'],
     [name: 'api-gateway',     deployment: 'deployment/api-gateway'],
-     [name: 'user-service',    deployment: 'deployment/user-service']
+    [name: 'user-service',    deployment: 'deployment/user-service']
 ]
 
 pipeline {
@@ -13,20 +13,19 @@ pipeline {
         DOCKER_USER         = "azizbenabdallah"
         DOCKER_PASS         = "jc-i5jxUL\$H36N4"
         DOCKER_IMAGE_TAG    = "${BUILD_NUMBER}"
-        MVN_OPTS            = "-T 1C -B -ntp -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
+        MVN_OPTS            = "-T 1C -B -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
         K8S_ROLLOUT_TIMEOUT = "180s"
     }
 
     options {
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 30, unit: 'MINUTES')
+        timeout(time: 60, unit: 'MINUTES')   // ✅ global 60min
         skipStagesAfterUnstable()
     }
 
     stages {
 
-        // ── 1. Checkout shallow ─────────────────────────────────
         stage('Checkout') {
             steps {
                 retry(3) {
@@ -50,16 +49,16 @@ pipeline {
             }
         }
 
-        // ── 2. Build Maven parallèle ────────────────────────────
         stage('Build & Package') {
             steps {
                 script {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Maven › ${service.name}": {
-                            timeout(time: 10, unit: 'MINUTES') {
+                            timeout(time: 20, unit: 'MINUTES') {  // ✅ 20min
                                 dir(service.name) {
                                     sh 'chmod +x mvnw'
+                                    // ✅ -ntp supprimé — télécharge si besoin
                                     sh "./mvnw clean package -DskipTests ${MVN_OPTS}"
                                 }
                             }
@@ -69,7 +68,6 @@ pipeline {
             }
         }
 
-        // ── 3. Docker Build & Push parallèle ───────────────────
         stage('Docker Build & Push') {
             when { branch 'AzizBack' }
             steps {
@@ -79,7 +77,7 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Docker › ${service.name}": {
-                            timeout(time: 10, unit: 'MINUTES') {
+                            timeout(time: 15, unit: 'MINUTES') {  // ✅ 15min
                                 sh """
                                     docker build \
                                         -t ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG} \
@@ -101,7 +99,6 @@ pipeline {
             }
         }
 
-        // ── 4. Deploy Kubernetes ────────────────────────────────
         stage('Deploy to Kubernetes') {
             when { branch 'AzizBack' }
             steps {
