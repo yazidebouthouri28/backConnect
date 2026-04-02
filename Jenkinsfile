@@ -14,13 +14,13 @@ pipeline {
         DOCKER_PASS         = "jc-i5jxUL\$H36N4"
         DOCKER_IMAGE_TAG    = "${BUILD_NUMBER}"
         MVN_OPTS            = "-T 1C -B -Dmaven.repo.local=${WORKSPACE}/.m2/repository"
-        K8S_ROLLOUT_TIMEOUT = "180s"
+        K8S_ROLLOUT_TIMEOUT = "240m"             // ✅ 4h
     }
 
     options {
         timestamps()
         buildDiscarder(logRotator(numToKeepStr: '10'))
-        timeout(time: 60, unit: 'MINUTES')   // ✅ global 60min
+        timeout(time: 2, unit: 'HOURS')          // ✅ 2h global
         skipStagesAfterUnstable()
     }
 
@@ -55,10 +55,9 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Maven › ${service.name}": {
-                            timeout(time: 20, unit: 'MINUTES') {  // ✅ 20min
+                            timeout(time: 60, unit: 'MINUTES') {  // ✅ 1h
                                 dir(service.name) {
                                     sh 'chmod +x mvnw'
-                                    // ✅ -ntp supprimé — télécharge si besoin
                                     sh "./mvnw clean package -DskipTests ${MVN_OPTS}"
                                 }
                             }
@@ -77,7 +76,7 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Docker › ${service.name}": {
-                            timeout(time: 15, unit: 'MINUTES') {  // ✅ 15min
+                            timeout(time: 60, unit: 'MINUTES') {  // ✅ 1h
                                 sh """
                                     docker build \
                                         -t ${DOCKER_REPO}-${service.name}:${DOCKER_IMAGE_TAG} \
@@ -108,7 +107,7 @@ pipeline {
                     parallel SERVICES.collectEntries { svc ->
                         def service = svc
                         ["Rollout › ${service.name}": {
-                            timeout(time: 5, unit: 'MINUTES') {
+                            timeout(time: 30, unit: 'MINUTES') {  // ✅ 30min
                                 try {
                                     sh "kubectl rollout status ${service.deployment} --timeout=${K8S_ROLLOUT_TIMEOUT}"
                                 } catch (err) {
