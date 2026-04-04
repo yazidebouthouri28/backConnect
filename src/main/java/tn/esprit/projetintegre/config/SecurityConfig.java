@@ -70,7 +70,8 @@ public class SecurityConfig {
                                 "/api/events/**",
                                 "/api/general-reviews/**",
                                 "/api/event-services/**",
-                                "/api/camping-services/**"
+                                "/api/camping-services/**",
+                                "/api/candidatures/**"
                         ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
