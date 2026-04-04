@@ -237,6 +237,7 @@ public class PackService {
         return toResponse(pack);
     }
 
+    @Transactional
     public void deletePack(Long id) {
         // Only ADMIN can delete packs
         if (!SecurityUtil.hasRole(Role.ADMIN)) {
@@ -244,7 +245,9 @@ public class PackService {
         }
         Pack pack = packRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pack non trouvé avec l'ID: " + id));
+        // clear ManyToMany join table entries (pack_services) within same session
         pack.getServices().clear();
+        packRepository.saveAndFlush(pack);
         packRepository.delete(pack);
     }
 
