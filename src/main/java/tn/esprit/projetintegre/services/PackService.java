@@ -244,8 +244,8 @@ public class PackService {
         }
         Pack pack = packRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Pack non trouvé avec l'ID: " + id));
-        pack.setIsActive(false);
-        packRepository.save(pack);
+        pack.getServices().clear();
+        packRepository.delete(pack);
     }
 
     private PackDTO.Response toResponse(tn.esprit.projetintegre.repositories.projections.PackProjection projection) {
