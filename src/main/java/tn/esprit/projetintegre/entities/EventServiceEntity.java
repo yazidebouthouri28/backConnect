@@ -7,13 +7,19 @@ import tn.esprit.projetintegre.enums.ServiceType;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "event_services", indexes = {
-    @Index(name = "idx_evtsvc_event", columnList = "event_id"),
-    @Index(name = "idx_evtsvc_type", columnList = "serviceType")
+        @Index(name = "idx_evtsvc_event", columnList = "event_id"),
+        @Index(name = "idx_evtsvc_type", columnList = "serviceType")
 })
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class EventServiceEntity {
 
     @Id
@@ -46,16 +52,29 @@ public class EventServiceEntity {
     @Builder.Default
     private Integer quantity = 1;
 
+    @Min(value = 1, message = "La quantité requise doit être au moins 1")
+    @Builder.Default
+    private Integer quantiteRequise = 1;
+
+    @Builder.Default
+    private Integer quantiteAcceptee = 0;
+
     @Size(max = 500, message = "Les notes ne peuvent pas dépasser 500 caractères")
     @Column(length = 500)
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id", nullable = false)
+    @JsonIgnoreProperties({"requestedServices", "tickets", "reservations", "organizer", "site"})
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "service_id")
+    private CampingService service;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "provider_id")
+    @JsonIgnoreProperties({"password", "emailVerificationToken", "passwordResetToken", "wallet", "cart", "orders", "reviews", "subscriptions", "transactions"})
     private User provider;
 
     @Column(updatable = false)

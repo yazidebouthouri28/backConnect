@@ -14,26 +14,32 @@ import java.util.Optional;
 @Repository
 public interface CandidatureServiceRepository extends JpaRepository<CandidatureService, Long> {
 
-    @EntityGraph(attributePaths = {"candidat", "service"}) // Charge les relations nécessaires
+    @EntityGraph(attributePaths = { "candidat", "eventService" }) // Charge les relations nécessaires
     Optional<CandidatureService> findByNumeroCandidature(String numero);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
     List<CandidatureService> findByCandidatId(Long userId);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
     Page<CandidatureService> findByCandidatId(Long userId, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
-    List<CandidatureService> findByServiceId(Long serviceId);
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
+    List<CandidatureService> findByEventServiceId(Long eventServiceId);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
     List<CandidatureService> findByStatut(StatutCandidature statut);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
-    List<CandidatureService> findByServiceIdAndStatut(Long serviceId, StatutCandidature statut);
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
+    List<CandidatureService> findByEventServiceIdAndStatut(Long eventServiceId, StatutCandidature statut);
 
-    @EntityGraph(attributePaths = {"candidat", "service"})
-    Optional<CandidatureService> findById(Long id);
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
+    List<CandidatureService> findByEventServiceEventId(Long eventId);
 
-    boolean existsByCandidatIdAndServiceId(Long userId, Long serviceId);
+    @EntityGraph(attributePaths = { "candidat", "eventService", "eventService.event" })
+    List<CandidatureService> findByEventService_Event_Organizer_User_Id(Long userId);
+
+    @EntityGraph(attributePaths = { "candidat", "eventService" })
+    List<CandidatureService> findByEventService_Event_Organizer_Id(Long organizerId);
+
+    boolean existsByCandidatIdAndEventServiceId(Long userId, Long eventServiceId);
 }

@@ -8,21 +8,27 @@ import tn.esprit.projetintegre.enums.StatutCandidature;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "candidatures_service", indexes = {
-    @Index(name = "idx_cand_user", columnList = "user_id"),
-    @Index(name = "idx_cand_service", columnList = "service_id"),
-    @Index(name = "idx_cand_statut", columnList = "statut")
+@Table(name = "candidatures_service_v2", indexes = {
+        @Index(name = "idx_cand_user", columnList = "user_id"),
+        @Index(name = "idx_cand_service", columnList = "camping_service_id"),
+        @Index(name = "idx_cand_statut", columnList = "statut")
 })
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class CandidatureService {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Le numéro de candidature est obligatoire")
     @Size(max = 50, message = "Le numéro ne peut pas dépasser 50 caractères")
     @Column(unique = true)
     private String numeroCandidature;
@@ -61,14 +67,22 @@ public class CandidatureService {
     @Column(length = 1000)
     private String motifRefus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User candidat;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "service_id", nullable = false)
+    @JoinColumn(name = "camping_service_id")
     private CampingService service;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_service_id", nullable = false)
+    private EventServiceEntity eventService;
+
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "evaluateur_id")
     private User evaluateur;
@@ -90,5 +104,74 @@ public class CandidatureService {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    @JsonProperty("eventId")
+    public Long fetchEventId() {
+        return (eventService != null && eventService.getEvent() != null) ? eventService.getEvent().getId() : null;
+    }
+
+    @JsonProperty("serviceName")
+    public String fetchServiceName() {
+        return (eventService != null && eventService.getName() != null) ? eventService.getName() : null;
+    }
+
+    @JsonProperty("nomParticipant")
+    public String fetchNomParticipant() {
+        return (candidat != null) ? candidat.getName() : "Inconnu";
+    }
+
+    @JsonProperty("eventName")
+    public String fetchEventName() {
+        return (eventService != null && eventService.getEvent() != null) ? eventService.getEvent().getTitle() : "Événement inconnu";
+    }
+
+    @JsonProperty("eventImage")
+    public String fetchEventImage() {
+        if (eventService != null && eventService.getEvent() != null) {
+            Event e = eventService.getEvent();
+            return (e.getImages() != null && !e.getImages().isEmpty()) ? e.getImages().get(0) : e.getThumbnail();
+        }
+        return null;
+    }
+
+    @JsonProperty("participantAvatar")
+    public String fetchParticipantAvatar() {
+        return (candidat != null) ? candidat.getAvatar() : null;
+    }
+
+    @JsonProperty("participantId")
+    public Long fetchParticipantId() {
+        return (candidat != null) ? candidat.getId() : null;
+    }
+
+    @JsonProperty("candidatId") // Alternative name
+    public Long fetchCandidatId() {
+        return (candidat != null) ? candidat.getId() : null;
+    }
+
+    @JsonProperty("eventServiceId")
+    public Long fetchEventServiceId() {
+        return (eventService != null) ? eventService.getId() : null;
+    }
+
+    @JsonProperty("serviceId")
+    public Long fetchServiceId() {
+        return (service != null) ? service.getId() : null;
+    }
+
+    @JsonProperty("participantName")
+    public String fetchParticipantName() {
+        return (candidat != null) ? candidat.getName() : "Inconnu";
+    }
+
+    @JsonProperty("candidatName") // Used by CandidatureManageComponent
+    public String fetchCandidatName() {
+        return (candidat != null) ? candidat.getName() : "Inconnu";
+    }
+
+    @JsonProperty("eventServiceName") // Used by CandidatureManageComponent
+    public String fetchEventServiceName() {
+        return (eventService != null) ? eventService.getName() : "N/A";
     }
 }
