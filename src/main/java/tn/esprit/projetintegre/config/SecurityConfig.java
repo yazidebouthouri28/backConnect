@@ -38,7 +38,7 @@ public class SecurityConfig {
                             "http://localhost:4200",
                             "http://localhost:3000"
                     ));
-                    config.setAllowedMethods(List.of("*"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
@@ -79,9 +79,9 @@ public class SecurityConfig {
                                 "/api/reservations/site",
                                 "/api/tickets/purchase"
                         ).permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.PATCH,
-                                "/api/packs/*/status"
-                        ).authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/packs/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/packs/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/packs/**").authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
