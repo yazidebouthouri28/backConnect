@@ -229,6 +229,14 @@ public class PackService {
         return toResponse(pack);
     }
 
+    public PackDTO.Response setActiveStatus(Long id, boolean active) {
+        Pack pack = packRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pack non trouvé avec l'ID: " + id));
+        pack.setIsActive(active);
+        pack = packRepository.save(pack);
+        return toResponse(pack);
+    }
+
     public void deletePack(Long id) {
         // Only ADMIN can delete packs
         if (!SecurityUtil.hasRole(Role.ADMIN)) {

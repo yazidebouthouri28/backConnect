@@ -79,6 +79,9 @@ public class SecurityConfig {
                                 "/api/reservations/site",
                                 "/api/tickets/purchase"
                         ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.PATCH,
+                                "/api/packs/*/status"
+                        ).authenticated()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
