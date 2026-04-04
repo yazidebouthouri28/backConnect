@@ -73,6 +73,10 @@ public class SecurityConfig {
                                 "/api/camping-services/**",
                                 "/api/candidatures/**"
                         ).permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST,
+                                "/api/reservations/event",
+                                "/api/reservations/site"
+                        ).permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
